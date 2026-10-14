@@ -1,6 +1,6 @@
-# Ink preset: paper, blueprint, hologram
+# Presets: paper, blueprint, hologram
 
-One pencil line promoted three times: graphite on paper, wire on a blueprint, light on black. Copy these paragraphs into a brief that uses the preset.
+The three inks of the CLAUDE reel: one pencil line promoted three times, graphite on paper, wire on a blueprint, light on black. They are presets, not defaults: a brand uses them only when they fit (`"preset": "paper"` in brand.json, recoloured with `colors`). See `brand.md` for the full treatment menu. A brief that uses all three can copy these paragraphs.
 
 ```
 Palette: paper cream #EDE6D5, blueprint blue #1B3ED2, hologram cyan #45F0DD, plus black #07080A, graphite #16161A and white. Each stage's accent is the next stage's colour: blue pencil on paper, cyan on the blueprint, white on the hologram.
@@ -20,4 +20,4 @@ Three inks. The same geometry is drawn in whichever ink is on screen:
 
 `fill(shape, { mode: 'solid' })` fills flat in any ink. Use it for small things: eyes, keyframe diamonds, a highlighted bar.
 
-`palette` in `scenes.js` for this preset: `['#EDE6D5', '#1B3ED2', '#45F0DD', '#07080A', '#16161A', '#FFFFFF']`.
+The CLAUDE reel's brand.json (`examples/claude-motion-designer/brand.json`) shows them in use.

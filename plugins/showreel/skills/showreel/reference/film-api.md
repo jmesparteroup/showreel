@@ -1,6 +1,6 @@
 # Film API
 
-A film is a folder with `scenes.js`, `shared.js`, `brief.md` and `bars/NN.js`. `new-film.mjs` scaffolds it.
+A film is a folder with `scenes.js`, `shared.js`, `brand.json`, `brief.md` and `bars/NN.js` (plus `fonts/` and any images brand.json names). `new-film.mjs` scaffolds it.
 
 ## `scenes.js`
 
@@ -8,22 +8,27 @@ A film is a folder with `scenes.js`, `shared.js`, `brief.md` and `bars/NN.js`. `
 import * as b01 from './bars/01.js';
 // ...
 const BARS = [b01, /* ... */];
-const BAR = 2; // seconds per bar at 120 BPM
+const BAR = 2; // seconds per bar: 60 / bpm * beatsPerBar
 
 export default {
   slug: 'my-film',                       // lowercase letters, digits, dashes
   bpm: 120,
   bars: 15,
+  beatsPerBar: 4,                        // optional, default 4
+  fps: 60,                               // optional: 24, 25, 30, 48, 50, 60
+  size: [1920, 1080],                    // optional, even integers
   barNames: ['DRAFT', /* one per bar */],
-  palette: ['#EDE6D5', '#1B3ED2', '#45F0DD', '#07080A', '#16161A', '#FFFFFF'],
   cues: BARS.flatMap(b => b.cues),      // seconds; the beats check reads these
+  sounds: BARS.flatMap(b => b.sounds ?? []),
   draw(ctx, t, api) {
     BARS[Math.min(BARS.length - 1, Math.floor((t + 0.05) / BAR))].draw(t, api);
   },
 };
 ```
 
-A bar module owns film time `[start - 0.05, end - 0.05)`, so a move that lands on the bar's downbeat starts inside the bar that animates it. Bar 15 also draws t = 30, the loop frame, which must equal frame 0.
+A bar module owns film time `[start - 0.05, end - 0.05)`, so a move that lands on the bar's downbeat starts inside the bar that animates it. The last bar also draws t = duration, the loop frame, which must equal frame 0.
+
+The palette check uses brand.json's palette; a film may override it with its own `palette` list. Set `labels: false` only for a film that must not have corner labels.
 
 ## Bar modules
 
@@ -31,6 +36,7 @@ A bar module owns film time `[start - 0.05, end - 0.05)`, so a move that lands o
 import { CX, CY, title } from '../shared.js';
 
 export const cues = [3.95, 4.45, 4.95, 5.45];   // real move start times
+export const sounds = [{ t: 4.0, kind: 'press' }, { t: 4.5, kind: 'pop' }, { t: 5.0, kind: 'type', count: 8, interval: 0.04 }];
 
 export function draw(t, api) {
   const p = api.pen('paper');
@@ -41,17 +47,34 @@ export function draw(t, api) {
 }
 ```
 
-Every bar paints the whole frame: background, its geometry, labels, then `flush()`. Nothing carries over between frames.
+Every bar paints the whole frame: background, its geometry, labels, then `flush()`. Nothing carries over between frames. If a bar does not call `api.labels`, the stage draws the labels in the frame's last ink.
 
-Paper pens draw into one shared offscreen layer that `flush()` composites onto the frame, so:
+### Sounds
 
-- Finish one paper pen (`flush()`) before calling `api.pen('paper')` again; a new pen clears the layer.
+`sounds` entries are `{ t, kind, gain?, count?, interval? }`, with `t` the moment the sound should be heard (usually the beat a move lands on):
+
+| `kind` | Use under |
+|---|---|
+| `whoosh` | wipes, floods, things flying in (it swells into `t`) |
+| `sweep` | scan lines, rising reveals (half a second from `t`) |
+| `press` | presses, crushes, things landing hard |
+| `hit` | strikes on the beat |
+| `pop` | shapes appearing, splitting, morphing |
+| `click` | cursor clicks, switches |
+| `tick` | single marks, ticks on a ruler |
+| `type` | typing on or off: `count` ticks `interval` s apart (default 6 and 0.05) |
+
+### Pens that share the layer
+
+Inks with a `pencil` or `marker` line, or with grain, draw into one shared offscreen layer that `flush()` composites onto the frame, so:
+
+- Finish one such pen (`flush()`) before calling `api.pen()` again; a new pen clears the layer.
 - To clip pencil drawing, flush the main pen, then clip `api.ctx` and draw with a second pen, flushing it before `restore()`:
 
 ```js
 p.flush();
 api.ctx.save();
-api.ctx.beginPath(); api.ctx.rect(0, top, 1920, bottom - top); api.ctx.clip();
+api.ctx.beginPath(); api.ctx.rect(0, top, api.W, bottom - top); api.ctx.clip();
 const q = api.pen('paper');
 q.type(glyphs, { id: 'word' });
 q.flush();
@@ -63,9 +86,11 @@ api.ctx.restore();
 | Member | Use |
 |---|---|
 | `api.t` | Film time in seconds (also the `t` argument). |
-| `api.W`, `api.H` | 1920, 1080. |
+| `api.W`, `api.H`, `api.CX`, `api.CY` | The film's size and centre. |
+| `api.border` | `{ x, y }`: the empty border in px for this size. |
+| `api.brand` | The loaded brand: `name`, `palette` (name → hex), `inkNames`, `inks`, `fonts`, `sound`. |
 | `api.ctx` | The raw 2D context. Use it for clips only (`save`, `rect`, `clip`, `restore`); draw through a pen. |
-| `api.pen(name)` | A pen in `'paper'`, `'blueprint'` or `'hologram'` ink. |
+| `api.pen(name)` | A pen in one of the brand's inks, by name (`api.brand.inkNames`). |
 | `api.split(clip, outsideInk, insideInk, fn)` | Draws `fn(pen)` in two inks either side of a clip polygon. See `transitions.md`. |
 | `api.labels(pen)` | Draws both corner labels in the pen's ink. Call once per frame. |
 | `api.mascot(pen, opts)` | Draws the box character and returns its bbox. |
@@ -74,25 +99,26 @@ api.ctx.restore();
 | `api.ease` | `spring(s, w)`, `expoIn(u)`, `expoOut(u)`, `expoInOut(u)`, `seq(t, from, keys)`, `lerp(a, b, u)`. |
 | `api.geom` | Shapes and transforms; see below. |
 | `api.type` | `layout(font, text, opts)`, `fit(font, text, width)`, `bounds(glyphs)`. |
-| `api.fonts` | `black` (900), `xbold` (800), `semi` (600). |
+| `api.fonts` | `display`, `label`, `body` from brand.json; `black`, `xbold`, `semi` are always Geist 900, 800, 600. |
 | `api.frozen` | True during checks; the pen handles it, films can ignore it. |
 
 ## Pen
 
 ```js
 p.bg();                                              // background + grid
-p.stroke(pts, { closed, color, width, dashed, id }); // color: 'line' | 'accent' | 'solid'
+p.stroke(pts, { closed, color, width, dashed, id }); // color: 'line' | 'accent' | 'solid' | 'fill' | palette name | #hex
 p.fill(shape, { color, mode, progress, spacing, angle, lit, id });
-p.type(glyphs, { color, progress, id });             // big hatched / scan-lined type
-p.text(str, { x, y, size, weight, tracking, align, color }); // small solid labels
+p.type(glyphs, { color, progress, id });             // big type in the ink's type treatment
+p.text(str, { x, y, size, weight, tracking, align, color }); // small solid labels; weight: 'label' | 'display' | 'body' | 'xbold' ...
 p.flush();                                           // once, after drawing
 ```
 
 - `shape` is one contour `[[x, y], ...]` or an array of contours (filled even-odd, so letter counters stay open).
-- `mode`: `'hatch'` (default), `'cross'`, `'solid'`. The hologram ink always fills with scan lines unless `'solid'`.
-- `progress` 0..1 draws hatch lines or scan lines one at a time.
-- `lit` (hologram) is 0..1 or `(x, y) => 0..1`; it sets scan-line thickness.
-- `id`: pencil wobble is seeded by stroke id and the 1/8 s tick. Ids default to call order, which is stable while the draw order is. If the number of strokes drawn before a stroke changes over time (letters typing on, cells appearing), give that stroke an explicit `id` so it does not jitter every frame.
+- A fill uses the ink's fill treatment. `mode: 'solid'` always fills flat; `mode: 'cross'` turns `hatch` into cross-hatching; `style` forces a treatment (`'dots'`, `'scan'`, ...).
+- The default fill colour is the ink's `fill.color`.
+- `progress` 0..1 draws hatch lines, scan lines or dot rows one at a time.
+- `lit` is 0..1 or `(x, y) => 0..1`; it sets scan-line thickness and dot size.
+- `id`: pencil and marker wobble is seeded by stroke id and the 1/8 s tick. Ids default to call order, which is stable while the draw order is. If the number of strokes drawn before a stroke changes over time (letters typing on, cells appearing), give that stroke an explicit `id` so it does not jitter every frame.
 
 ## Geometry (`api.geom`)
 

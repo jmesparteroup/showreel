@@ -4,10 +4,11 @@ A brief has four tagged sections, in this order. Write in short declarative sent
 
 ```
 <direction>
-Build a {duration}-second looping motion design showreel that introduces {SUBJECT}, {descriptor}.
+Build a {duration}-second looping {width} x {height}, {fps} fps film that introduces {SUBJECT}, {descriptor}.
 Concept, in one line: {concept}.
 {house rules: direction block}
-Palette: {named hexes}. Each stage's accent is the next stage's colour: {...}.
+Typefaces: {display face and weight} for big words, {label face and weight} for labels.
+Palette: {named hexes from brand.json}. Each stage's accent is the next stage's colour: {...}.
 {N} inks. The same geometry is drawn in whichever ink is on screen:
 - {INK}: background, grid, line treatment, fill treatment, big-type treatment.
 </direction>
@@ -16,6 +17,7 @@ Palette: {named hexes}. Each stage's accent is the next stage's colour: {...}.
 {house rules: structure block}
 Scene changes: {ink A} to {ink B} by {a shape that floods the frame with a hard edge | one horizontal scan line}; ...
 Bar names: {NAME, NAME, ...}.
+Sound: {style}, {key}. {Which moves are heard: whooshes on floods, ticks under typing, ...} | The brand's track {file}, from {offset} s.
 </structure>
 
 <mascot>
@@ -46,6 +48,7 @@ Frame 0: {exact layout of the opening frame: positions, sizes, text}.
 - [ ] Every bar has four cues
 - [ ] Every bar's first cue continues the previous bar's last state
 - [ ] Nothing rests inside the empty border
+- [ ] Palette, typefaces, inks and sound match brand.json
 - [ ] Each ink is fully specified (background, grid, lines, fills, type)
 - [ ] Each stage's accent is the next stage's colour
 - [ ] The last bar rebuilds frame 0

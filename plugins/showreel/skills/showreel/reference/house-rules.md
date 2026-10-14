@@ -6,31 +6,32 @@ Every film inherits these. Copy the two blocks below into the brief's `<directio
 
 ```
 Every shot is made out of the previous one: shapes, type and colour transform into the next scene. No cuts, no fades.
-Typeface: Geist only. Weight 900 for big words, 600 to 800 for small labels (24 to 28 px, tracked 0.14 to 0.3 em).
+Typefaces: the brand's display face for big words, its label face for small labels (24 to 28 px at 1080 px high, scaled with the frame, tracked 0.14 to 0.3 em). Geist when the brand has none.
 Camera: locked and front-on for the whole film, like a drafting table. Objects turn; the camera never moves.
-Empty border: nothing at rest within 150 px of the sides or 90 px of the top and bottom. Things travelling through may cross it.
+Empty border: nothing at rest within {border x} px of the sides or {border y} px of the top and bottom (7.8 % of the width and 8.3 % of the height: 150 x 90 at 1920 x 1080, 84 x 160 at 1080 x 1920). Things travelling through may cross it.
 Banned: particle bursts, glows, lens flares, camera shake, RGB split, crossfades, generic gradients, bouncy easing, holds longer than half a second, anything that looks like a template.
 ```
 
 ## For `<structure>`
 
 ```
-{BPM} BPM, {beats} beats, {bars} bars of {bar seconds} seconds. Something happens on every beat. Moves start 0.05 s before their beat so they land on it.
+{width} x {height} at {fps} fps. {BPM} BPM, {beats per bar} beats a bar, {beats} beats, {bars} bars of {bar seconds} seconds. Something happens on every beat. Moves start 0.05 s before their beat so they land on it.
 Easing: a critically damped spring, 1 - (1 + w t) e^(-w t) with w between 12 and 40, so nothing ever passes its target; exponential ease-in and ease-out for wipes, presses and exits.
-The last frame is the first frame, so it loops.
+The last frame is the first frame, and the soundtrack loops with it.
 Two corner labels stay on all film: top left "FIG. 07 — GEAR" (bar number and name), bottom right "BEAT 27 / 60".
 ```
 
-## Defaults
+## Format
 
-| | |
-|---|---|
-| Frame | 1920 x 1080, 60 fps |
-| Tempo | 120 BPM, 4 beats a bar, 2 s bars |
-| Length | 15 bars = 30 s = 60 beats = 1800 frames |
-| Labels | Geist 800, 26 px, tracked 0.2 em; top left baseline at (150, 114), bottom right right-aligned at (1770, 990) |
+| | Default | Choices |
+|---|---|---|
+| Frame | 1920 x 1080 | 1080 x 1920 (stories, reels), 1080 x 1080, 1080 x 1350, or any even size |
+| Frame rate | 60 fps | 24, 25, 30, 48, 50, 60 |
+| Meter | 4 beats a bar | 1 to 12 |
+| Tempo | 120 BPM | any; match the brand's track if it has one |
+| Length | 15 bars | any; 4 to 8 bars for social cuts |
 
-Change tempo or length only when the concept asks for it. The engine reads `bpm` and `bars` from `scenes.js`.
+Labels and the border scale with the frame; the hold limit is half a second at the film's frame rate.
 
 ## What the checks enforce
 
