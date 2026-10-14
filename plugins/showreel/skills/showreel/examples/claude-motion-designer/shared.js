@@ -109,3 +109,40 @@ export function drawTitle(p, api, t, s) {
   typed(p, T.director, s.director ?? 17, { id: 'director' });
   if (s.rest) api.rest({ x: RAIL.x0, y: railY - 200, w: RAIL.x1 - RAIL.x0, h: T.sub.glyphs[0].y - railY + 200 });
 }
+
+// Cube edges with hidden ones flagged. `depth` squeezes the cube towards its
+// front face plane (world z = -edge / 2), which bars 7 and 8 use to flatten it.
+export function cubeEdges(api, { edge, rot, cx = CX, cy = CY, f = Infinity, depth = 1 }) {
+  const g = api.geom;
+  const { verts, edges, faces } = g.cube(edge);
+  const h = edge / 2;
+  const tv = verts.map(v => g.rotZ(g.rotX(g.rotY(v, rot.y), rot.x), rot.z));
+  const facing = faces.map(([a, b, c]) => {
+    const u = [tv[b][0] - tv[a][0], tv[b][1] - tv[a][1]], w = [tv[c][0] - tv[a][0], tv[c][1] - tv[a][1]];
+    return u[0] * w[1] - u[1] * w[0] < -1e-6;
+  });
+  const P = tv.map(([x, y, z]) => g.project([x, y, -h + (z + h) * depth], { cx, cy, f }));
+  return edges.map(([a, b]) => ({ a: P[a], b: P[b], hidden: !faces.some((fc, i) => facing[i] && fc.includes(a) && fc.includes(b)) }));
+}
+
+export const FRONT_SCALE = f => (Number.isFinite(f) ? f / (f - CUBE_EDGE / 2) : 1);
+
+// Bars 14-15: the two rails close into the frame-0 rail, and the mascot runs along it to x = 1560.
+export function formRails(t, api) {
+  const { spring, lerp } = api.ease;
+  const T = title(api);
+  const c = spring(t - 27.45, 16);
+  return {
+    top: lerp(CY - RAILS.gap / 2, T.railY, c),
+    bot: lerp(CY + RAILS.gap / 2, T.railY, c),
+    x0: lerp(RAILS.x0, RAIL.x0, c),
+    x1: lerp(RAILS.x1, RAIL.x1, c),
+  };
+}
+
+export const MASCOT_DRUM_X = 510;
+
+export function mascotForm(t, api) {
+  const u = api.ease.spring(t - 27.45, 12);
+  return { x: MASCOT_DRUM_X + (MASCOT_X - MASCOT_DRUM_X) * u, pose: u > 0 && u < 0.995 ? 'run' : 'stand' };
+}

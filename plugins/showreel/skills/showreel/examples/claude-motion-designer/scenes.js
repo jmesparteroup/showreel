@@ -13,7 +13,6 @@ import * as b12 from './bars/12.js';
 import * as b13 from './bars/13.js';
 import * as b14 from './bars/14.js';
 import * as b15 from './bars/15.js';
-
 import { NAMES } from './shared.js';
 
 const BARS = [b01, b02, b03, b04, b05, b06, b07, b08, b09, b10, b11, b12, b13, b14, b15];

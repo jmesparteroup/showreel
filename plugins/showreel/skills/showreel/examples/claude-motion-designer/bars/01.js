@@ -2,7 +2,8 @@
 import { CY, RAIL, RAILS, MASCOT_X, title, drawTitle, clamp01 } from '../shared.js';
 
 // The first beat's moves start on t = 0, not 0.05 s early, so frame 0 is the still title.
-export const cues = [0, 0.36, 0.95, 1.45];
+// The rail meets the letters at 0.45 (96 px into its 394 px cubic drop): that is when the press begins.
+export const cues = [0, 0.36, 0.45, 0.95, 1.45];
 
 const TICKS = 41;
 
