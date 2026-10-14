@@ -43,6 +43,21 @@ export function draw(t, api) {
 
 Every bar paints the whole frame: background, its geometry, labels, then `flush()`. Nothing carries over between frames.
 
+Paper pens draw into one shared offscreen layer that `flush()` composites onto the frame, so:
+
+- Finish one paper pen (`flush()`) before calling `api.pen('paper')` again; a new pen clears the layer.
+- To clip pencil drawing, flush the main pen, then clip `api.ctx` and draw with a second pen, flushing it before `restore()`:
+
+```js
+p.flush();
+api.ctx.save();
+api.ctx.beginPath(); api.ctx.rect(0, top, 1920, bottom - top); api.ctx.clip();
+const q = api.pen('paper');
+q.type(glyphs, { id: 'word' });
+q.flush();
+api.ctx.restore();
+```
+
 ## `api`
 
 | Member | Use |
