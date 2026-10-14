@@ -42,7 +42,7 @@ async function loadImage(path) {
 const REQUIRED = ['slug', 'bpm', 'bars', 'barNames', 'cues', 'draw'];
 
 export async function boot(canvas, filmUrl) {
-  if (!/^\/film\/[\w./-]+\.js$/.test(filmUrl ?? '') || filmUrl.includes('..')) throw new Error(`film must be served from /film/, got ${filmUrl}`);
+  if ((!/^\/film\/[\w./-]+\.js$/.test(filmUrl ?? '') && filmUrl !== '/engine/swatch-film.js') || filmUrl.includes('..')) throw new Error(`film must be served from /film/, got ${filmUrl}`);
   const [mod, brandJson] = await Promise.all([import(filmUrl), loadBrandFile()]);
   const film = mod.default;
   const missing = REQUIRED.filter(k => film?.[k] === undefined);

@@ -89,7 +89,7 @@ test('host page refuses a film from outside /film/', async () => {
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
-    const url = site.url.replace('film=/film/scenes.js', 'film=' + encodeURIComponent('data:text/javascript,export default 1'));
+    const url = site.url.replace(/film=[^&]*/, 'film=' + encodeURIComponent('data:text/javascript,export default 1'));
     await page.goto(url);
     await page.waitForFunction(() => window.__ready || window.__error);
     assert.match(await page.evaluate(() => window.__error), /film must be served from \/film\//);

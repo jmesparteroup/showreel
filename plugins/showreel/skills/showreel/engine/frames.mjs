@@ -35,11 +35,14 @@ function serve(mounts) {
   return new Promise(resolve => server.listen(0, '127.0.0.1', () => resolve(server)));
 }
 
-export async function serveFilm(filmDir) {
+// `entry` swaps the film module for an engine-provided one (the swatch film), which
+// still reads brand.json and fonts from the film folder.
+export async function serveFilm(filmDir, { entry = '/film/scenes.js' } = {}) {
   const film = path.resolve(filmDir);
-  if (!fs.existsSync(path.join(film, 'scenes.js'))) throw new Error(`${path.join(film, 'scenes.js')}: scenes.js not found`);
+  if (entry === '/film/scenes.js' && !fs.existsSync(path.join(film, 'scenes.js'))) throw new Error(`${path.join(film, 'scenes.js')}: scenes.js not found`);
+  if (!fs.existsSync(film)) throw new Error(`${film}: film folder not found`);
   const server = await serve([['/engine', ENGINE], ['/fonts', path.join(SKILL, 'fonts')], ['/vendor/opentype', OPENTYPE], ['/film', film]]);
-  const url = `http://127.0.0.1:${server.address().port}/engine/render.html?film=/film/scenes.js`;
+  const url = `http://127.0.0.1:${server.address().port}/engine/render.html?film=${encodeURIComponent(entry)}`;
   return { url, close: () => new Promise(r => server.close(r)) };
 }
 
@@ -64,8 +67,8 @@ function syntaxErrors(filmDir) {
   });
 }
 
-export async function openRenderer(filmDir, { pages = 1 } = {}) {
-  const site = await serveFilm(filmDir);
+export async function openRenderer(filmDir, { pages = 1, entry } = {}) {
+  const site = await serveFilm(filmDir, { entry });
   let browser;
   try {
     // GPU canvas raster switches paths mid-session and shifts pixels by a few
