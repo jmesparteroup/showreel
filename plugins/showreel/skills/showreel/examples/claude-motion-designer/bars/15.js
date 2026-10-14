@@ -2,6 +2,7 @@
 import { title, drawTitle, formRails, mascotForm } from '../shared.js';
 
 export const cues = [27.95, 28.45, 28.95, 29.45];
+export const sounds = [{ t: 28.0, kind: 'type', count: 11 }, { t: 28.5, kind: 'type', count: 17 }, { t: 29.0, kind: 'type', count: 17 }, { t: 29.5, kind: 'tick' }];
 
 export function draw(t, api) {
   const { spring, lerp } = api.ease;

@@ -4,6 +4,7 @@ import { CY, RAIL, RAILS, MASCOT_X, title, drawTitle, clamp01 } from '../shared.
 // The first beat's moves start on t = 0, not 0.05 s early, so frame 0 is the still title.
 // The rail meets the letters at 0.45 (96 px into its 394 px cubic drop): that is when the press begins.
 export const cues = [0, 0.36, 0.45, 0.95, 1.45];
+export const sounds = [{ t: 0, kind: 'type', count: 6 }, { t: 0.3, kind: 'whoosh' }, { t: 0.5, kind: 'press' }, { t: 1.0, kind: 'click' }, { t: 1.05, kind: 'type', count: 8 }, { t: 1.5, kind: 'pop' }];
 
 const TICKS = 41;
 

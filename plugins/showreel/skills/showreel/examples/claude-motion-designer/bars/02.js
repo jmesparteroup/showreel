@@ -3,6 +3,7 @@ import { CY, RAILS, shiftGlyph, mapGlyph } from '../shared.js';
 import { drawTicks, drawDimension } from './01.js';
 
 export const cues = [1.95, 2.45, 2.95, 3.45];
+export const sounds = [{ t: 2.0, kind: 'type', count: 11, interval: 0.025 }, { t: 2.6, kind: 'whoosh' }, { t: 3.05, kind: 'press' }, { t: 3.3, kind: 'whoosh', gain: 0.7 }, { t: 3.5, kind: 'type', count: 6 }];
 
 let cache = null;
 

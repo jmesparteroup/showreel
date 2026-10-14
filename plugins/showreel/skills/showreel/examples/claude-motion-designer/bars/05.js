@@ -2,6 +2,7 @@
 import { CX, CY, SHAPE_R, CELL, CELL_DRAW } from '../shared.js';
 
 export const cues = [7.95, 8.45, 8.95, 9.45];
+export const sounds = [{ t: 8.0, kind: 'pop' }, { t: 8.5, kind: 'pop' }, { t: 9.0, kind: 'sweep' }, { t: 9.95, kind: 'whoosh' }];
 
 // Cell centres and drawn radii at time t; bar 6 starts from the settled state.
 export function cellsAt(t, api) {

@@ -3,6 +3,7 @@ import { CY, RAILS, LATS, GLOBE_R } from '../shared.js';
 import { latitude, drawGlobe } from './12.js';
 
 export const cues = [19.95, 20.45, 20.95, 21.45];
+export const sounds = [{ t: 20.0, kind: 'sweep' }, { t: 20.5, kind: 'pop' }, { t: 21.0, kind: 'whoosh' }, { t: 21.5, kind: 'pop' }];
 
 const N = 161;
 const KS = [-4, -3, -2, -1, 0, 1, 2, 3, 4];

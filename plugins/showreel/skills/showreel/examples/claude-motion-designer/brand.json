@@ -1,0 +1,38 @@
+{
+  "name": "Claude",
+  "palette": {
+    "paper": "#EDE6D5",
+    "blue": "#1B3ED2",
+    "cyan": "#45F0DD",
+    "black": "#07080A",
+    "graphite": "#16161A",
+    "white": "#FFFFFF"
+  },
+  "fonts": {
+    "display": "geist:900",
+    "label": "geist:800",
+    "body": "geist:600"
+  },
+  "inks": [
+    {
+      "name": "paper",
+      "preset": "paper"
+    },
+    {
+      "name": "blueprint",
+      "preset": "blueprint"
+    },
+    {
+      "name": "hologram",
+      "preset": "hologram"
+    }
+  ],
+  "transitions": [
+    "flood",
+    "scan"
+  ],
+  "sound": {
+    "style": "electronic",
+    "key": "D minor"
+  }
+}

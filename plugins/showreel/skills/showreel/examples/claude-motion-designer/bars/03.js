@@ -3,6 +3,7 @@ import { CY, RAILS, CRUSH, middle } from '../shared.js';
 import { words, squash } from './02.js';
 
 export const cues = [3.95, 4.05, 4.45, 4.95, 5.45];
+export const sounds = [{ t: 4.05, kind: 'press' }, { t: 4.1, kind: 'click' }, { t: 4.5, kind: 'pop' }, { t: 5.0, kind: 'sweep' }, { t: 5.5, kind: 'pop' }];
 
 const N = 128;
 const HANDLE = 430;

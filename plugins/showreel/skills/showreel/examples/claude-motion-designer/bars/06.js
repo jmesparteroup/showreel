@@ -3,6 +3,7 @@ import { CX, CY, CELL_DRAW, CUBE_EDGE, CORNER_ON, cubeEdges } from '../shared.js
 import { cellsAt } from './05.js';
 
 export const cues = [9.95, 10.45, 10.95, 11.45];
+export const sounds = [{ t: 10.0, kind: 'type', count: 6 }, { t: 10.5, kind: 'whoosh' }, { t: 11.0, kind: 'sweep' }, { t: 11.5, kind: 'press' }];
 
 const CELL_EDGE = CELL_DRAW / Math.sqrt(2 / 3); // corner-on silhouette radius = edge · √(2/3)
 

@@ -120,12 +120,14 @@ export function renderScore({ duration, bpm, beatsPerBar, bars, sounds = [], sty
     }
   }
 
-  // Normalised to a fixed peak so every style sits at the same level; silence stays silent.
-  let peak = 0;
-  for (let i = 0; i < N; i++) peak = Math.max(peak, Math.abs(L[i]), Math.abs(R[i]));
-  if (peak > 0) {
-    const k = (0.89 * Math.min(1, gain)) / peak;
-    for (let i = 0; i < N; i++) { L[i] *= k; R[i] *= k; }
+  // Levelled by loudness, not by the single loudest hit: gain to a fixed RMS, then a
+  // tanh limiter so peaks round off under 0.89 instead of clipping. Silence stays silent.
+  let sum = 0;
+  for (let i = 0; i < N; i++) sum += L[i] * L[i] + R[i] * R[i];
+  const level = Math.sqrt(sum / (2 * N));
+  if (level > 0) {
+    const k = (0.16 * Math.min(1, gain)) / level;
+    for (let i = 0; i < N; i++) { L[i] = 0.89 * Math.tanh((L[i] * k) / 0.89); R[i] = 0.89 * Math.tanh((R[i] * k) / 0.89); }
   }
   return [L, R];
 }

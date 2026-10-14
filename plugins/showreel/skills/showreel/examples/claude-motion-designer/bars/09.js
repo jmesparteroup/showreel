@@ -3,6 +3,7 @@ import { CX, CY, PANELS, HEIGHTS, CHART, RING_R, RING_BIG, RING_BAR, partial } f
 import { drawDashboard, TL } from './08.js';
 
 export const cues = [15.95, 16.45, 16.95, 17.45];
+export const sounds = [{ t: 16.0, kind: 'sweep' }, { t: 16.5, kind: 'click' }, { t: 17.0, kind: 'type', count: 4, interval: 0.125 }, { t: 17.5, kind: 'click' }];
 
 const CHART_CX = (CHART.x0 + CHART.x1) / 2;
 const RING_C0 = [CHART_CX, CHART.base + RING_R]; // the ring's centre when the baseline first closes

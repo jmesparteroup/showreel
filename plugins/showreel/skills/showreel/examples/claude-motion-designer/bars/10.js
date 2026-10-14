@@ -3,6 +3,7 @@ import { CX, CY, RAILS, HEIGHTS } from '../shared.js';
 import { ringGeometry, drawBars } from './09.js';
 
 export const cues = [17.95, 18.45, 18.95, 19.45];
+export const sounds = [{ t: 18.0, kind: 'sweep' }, { t: 18.5, kind: 'type', count: 10 }, { t: 19.0, kind: 'press' }, { t: 19.8, kind: 'whoosh' }];
 
 export function draw(t, api) {
   const { spring, expoInOut } = api.ease;

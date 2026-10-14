@@ -2,6 +2,7 @@
 import { CX, CY, CRUSH, CIRCLE_R, SHAPE_R } from '../shared.js';
 
 export const cues = [5.95, 6.45, 6.95, 7.45];
+export const sounds = [{ t: 6.0, kind: 'sweep' }, { t: 6.5, kind: 'pop' }, { t: 7.0, kind: 'pop' }, { t: 7.5, kind: 'pop' }];
 
 const L = CRUSH.x1 - CRUSH.x0; // 1476 = 2π · 235
 

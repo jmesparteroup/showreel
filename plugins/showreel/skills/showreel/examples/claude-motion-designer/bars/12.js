@@ -2,6 +2,7 @@
 import { CX, CY, GLOBE_R, TILT, LATS } from '../shared.js';
 
 export const cues = [21.95, 22.45, 22.95, 23.45];
+export const sounds = [{ t: 22.0, kind: 'type', count: 4, interval: 0.5 }, { t: 22.5, kind: 'sweep' }, { t: 23.0, kind: 'type', count: 12, interval: 0.03 }, { t: 23.5, kind: 'press' }];
 
 const N = 160;
 const LIGHT = (() => { const v = [-0.45, -0.55, -0.7]; const l = Math.hypot(...v); return v.map(c => c / l); })();

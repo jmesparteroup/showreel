@@ -2,6 +2,7 @@
 import { CX, CY, CUBE_EDGE, PANELS, HEIGHTS, CHART, NAMES, typed } from '../shared.js';
 
 export const cues = [13.95, 14.45, 14.95, 15.45];
+export const sounds = [{ t: 14.0, kind: 'whoosh' }, { t: 14.5, kind: 'whoosh', gain: 0.7 }, { t: 15.0, kind: 'type', count: 10, interval: 0.04 }, { t: 15.5, kind: 'type', count: 8 }];
 
 const F = 1400;
 // Face order matches the panel each square becomes.

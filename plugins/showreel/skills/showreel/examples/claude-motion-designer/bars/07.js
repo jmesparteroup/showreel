@@ -3,6 +3,7 @@ import { CX, CY, CUBE_EDGE, GEAR_PITCH, cubeEdges, FRONT_SCALE } from '../shared
 import { drawEdges } from './06.js';
 
 export const cues = [11.95, 12.2, 12.45, 12.95, 13.45];
+export const sounds = [{ t: 12.0, kind: 'press' }, { t: 12.25, kind: 'type', count: 7, interval: 0.25 }, { t: 12.5, kind: 'pop' }, { t: 13.0, kind: 'pop' }, { t: 13.5, kind: 'press' }];
 
 const F = 1400;
 const FRONT = { x: 0, y: Math.PI, z: 0 };

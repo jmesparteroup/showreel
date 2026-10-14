@@ -3,6 +3,7 @@ import { CX, CY, LATS, DRUM, GLOBE_R, TILT, MASCOT_DRUM_X, NAMES, typed } from '
 import { drawGlobe, spinAt, strokeDepth } from './12.js';
 
 export const cues = [23.95, 24.45, 24.95, 25.45];
+export const sounds = [{ t: 24.0, kind: 'press' }, { t: 24.5, kind: 'hit' }, { t: 24.95, kind: 'type', count: 6, interval: 0.083 }, { t: 25.0, kind: 'hit' }, { t: 25.5, kind: 'hit' }];
 
 const N = 160;
 const HITS = [24.5, 25.0, 25.5];

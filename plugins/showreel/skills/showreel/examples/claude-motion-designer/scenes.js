@@ -25,6 +25,7 @@ export default {
   barNames: NAMES,
   palette: ['#EDE6D5', '#1B3ED2', '#45F0DD', '#07080A', '#16161A', '#FFFFFF'],
   cues: BARS.flatMap(b => b.cues),
+  sounds: BARS.flatMap(b => b.sounds ?? []),
   // A bar owns the 0.05 s lead-in before its first beat, so moves that land
   // on a downbeat start inside the bar that animates them.
   draw(ctx, t, api) {

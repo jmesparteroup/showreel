@@ -4,6 +4,7 @@ import { drumRing, MASCOT_Y, drawNames } from './13.js';
 import { strokeDepth } from './12.js';
 
 export const cues = [25.95, 26.45, 26.95, 27.45];
+export const sounds = [{ t: 26.0, kind: 'whoosh' }, { t: 26.5, kind: 'type', count: 6 }, { t: 27.0, kind: 'sweep' }, { t: 27.5, kind: 'whoosh' }];
 
 export function draw(t, api) {
   const { spring, expoInOut, lerp } = api.ease;
