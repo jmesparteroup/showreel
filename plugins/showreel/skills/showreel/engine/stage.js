@@ -5,6 +5,7 @@ import * as geom from './geom.js';
 import * as type from './type.js';
 import { makePen } from './ink/index.js';
 import { drawLabels, LABEL_BOXES } from './labels.js';
+import { mascot } from './mascot.js';
 
 const W = 1920, H = 1080;
 const parse = opentype.parse ?? opentype.default.parse;
@@ -61,7 +62,7 @@ export async function boot(canvas, filmUrl) {
       }
     };
     const api = {
-      t, W, H, ctx, clock, ease, geom, type, fonts, frozen, pen, split,
+      t, W, H, ctx, clock, ease, geom, type, fonts, frozen, pen, split, mascot,
       labels: p => drawLabels(p, { clock, t, barNames: film.barNames }),
       rest: box => rest.push(box),
     };
