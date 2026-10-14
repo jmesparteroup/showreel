@@ -38,7 +38,7 @@ showreel/
   examples/claude-motion-designer/
     brief.md
     scenes.js
-  package.json                  # engine deps for working on the repo itself
+  package.json                  # repo scripts; delegates to the engine's package.json
   README.md
   LICENSE                       # MIT; fonts/OFL.txt alongside the fonts
 ```
@@ -50,7 +50,7 @@ Install: `/plugin marketplace add jmesparteroup/showreel`, then `/plugin install
 1. **Parse** the subject and concept. If either is missing, ask for it.
 2. **Write the brief** to `films/<slug>/brief.md` in the user's working directory, following `brief-format.md`. The brief carries the house rules forward verbatim, then adds the concept-specific parts: stages and inks, palette, mascot, and a storyboard with a cue on every beat of every bar.
 3. **Stop.** Show the brief and wait for approval or edits. No scene code before that.
-4. **Scaffold** `films/<slug>/` (copies `package.json`, links the engine), `npm install`.
+4. **Scaffold** `films/<slug>/` with `new-film.mjs`. The engine owns its dependencies (`engine/package.json`, installed once per machine); films contain only their own code.
 5. **Write `scenes.js`** bar by bar against the engine API.
 6. **Checkpoint stills.** Render one PNG per bar at the bar's midpoint and at each scene change. Claude reads them and fixes what it sees before rendering motion.
 7. **Check.** `node engine/check.mjs films/<slug>` must pass.
