@@ -64,3 +64,15 @@ test('a film directory with % in its name exports at the film frame rate', async
   assert.match(r.stderr, /\b30 fps\b/);
   assert.match(r.stderr, /1080x1920/);
 });
+
+test('a scaffold at another tempo, meter, rate and size passes the beats check', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'showreel-'));
+  const dir = newFilm(root, 'waltz', { bpm: 90, bars: 3, beatsPerBar: 3, fps: 30, size: [1080, 1350] });
+  assert.ok(fs.existsSync(path.join(dir, 'brand.json')));
+  const { runChecks } = await import('../check.mjs');
+  const r = Object.fromEntries((await runChecks(dir, { only: ['beats'] })).map(x => [x.name, x]));
+  assert.ok(r.beats.ok, r.beats.detail);
+  assert.match(fs.readFileSync(path.join(dir, 'bars', '02.js'), 'utf8'), /Owns film time \[1\.95, 3\.95\)/);
+  const [still] = await writeStills(dir, [0.5]);
+  assert.equal(fs.readFileSync(still).readUInt32BE(16), 1080);
+});
