@@ -34,10 +34,11 @@ test('pencil wobble holds within an eighth of a second and changes across it', a
   } finally { await r.close(); }
 });
 
-test('the same t renders identical pixels', async () => {
+test('the same t renders identical pixels on every repeat', async () => {
   const r = await openRenderer(fixture('inks'));
   try {
-    assert.ok(sameFrames(await r.pixels(0.7, { scale: 0.25 }), await r.pixels(0.7, { scale: 0.25 })));
+    const first = await r.pixels(0.7, { scale: 0.25 });
+    for (let k = 1; k < 6; k++) assert.ok(sameFrames(first, await r.pixels(0.7, { scale: 0.25 })), `render ${k + 1} differs from render 1`);
   } finally { await r.close(); }
 });
 

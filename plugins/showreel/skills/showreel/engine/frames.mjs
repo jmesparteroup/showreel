@@ -46,7 +46,9 @@ export async function openRenderer(filmDir, { pages = 1 } = {}) {
   const site = await serveFilm(filmDir);
   let browser;
   try {
-    browser = await chromium.launch();
+    // GPU canvas raster switches paths mid-session and shifts pixels by a few
+    // levels; software raster keeps every frame a pure function of t.
+    browser = await chromium.launch({ args: ['--disable-gpu', '--disable-accelerated-2d-canvas'] });
   } catch (e) {
     await site.close();
     throw new Error(`Chromium failed to launch. Run: npx --prefix ${ENGINE} playwright install chromium\n${e.message}`);
