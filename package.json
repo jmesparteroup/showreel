@@ -5,7 +5,7 @@
   "scripts": {
     "setup": "npm --prefix plugins/showreel/skills/showreel/engine install && npx --prefix plugins/showreel/skills/showreel/engine playwright install chromium",
     "test": "npm --prefix plugins/showreel/skills/showreel/engine test && node --test \"test/*.test.mjs\"",
-    "check:example": "node plugins/showreel/skills/showreel/engine/check.mjs plugins/showreel/skills/showreel/examples/claude-motion-designer",
+    "check:example": "node plugins/showreel/skills/showreel/engine/check.mjs plugins/showreel/skills/showreel/examples/claude-motion-designer && node plugins/showreel/skills/showreel/engine/check.mjs plugins/showreel/skills/showreel/examples/kiln-and-co",
     "export:example": "node plugins/showreel/skills/showreel/engine/export.mjs plugins/showreel/skills/showreel/examples/claude-motion-designer"
   }
 }

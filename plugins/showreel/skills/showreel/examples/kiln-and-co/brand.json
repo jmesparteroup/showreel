@@ -1,0 +1,77 @@
+{
+  "name": "Kiln & Co.",
+  "source": "inline: a ceramics studio; handmade, warm, unhurried",
+  "tone": "handmade, warm, unhurried",
+  "palette": {
+    "clay": "#C8643B",
+    "cream": "#F3E9DC",
+    "ink": "#2B2118",
+    "glaze": "#2F6F73"
+  },
+  "fonts": {
+    "display": "fonts/SpaceGrotesk-700.ttf",
+    "label": "fonts/SpaceGrotesk-500.ttf"
+  },
+  "inks": [
+    {
+      "name": "KILN",
+      "bg": {
+        "color": "cream",
+        "grain": 0.06
+      },
+      "grid": null,
+      "line": {
+        "style": "marker",
+        "color": "ink",
+        "width": 6
+      },
+      "fill": {
+        "style": "dots",
+        "color": "clay",
+        "spacing": 12
+      },
+      "type": {
+        "fill": "dots",
+        "outline": "single",
+        "spacing": 9,
+        "width": 4
+      },
+      "accent": "glaze"
+    },
+    {
+      "name": "GLAZE",
+      "bg": {
+        "color": "glaze"
+      },
+      "grid": {
+        "color": "cream",
+        "step": 90,
+        "opacity": [
+          0.08,
+          0.16
+        ]
+      },
+      "line": {
+        "style": "clean",
+        "color": "cream",
+        "width": 5
+      },
+      "fill": {
+        "style": "solid",
+        "color": "clay"
+      },
+      "type": {
+        "fill": "solid",
+        "outline": "none"
+      },
+      "accent": "cream"
+    }
+  ],
+  "transitions": [
+    "flood"
+  ],
+  "sound": {
+    "style": "organic",
+    "key": "D major"
+  }
+}

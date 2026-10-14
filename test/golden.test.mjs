@@ -5,18 +5,18 @@ import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { openRenderer } from '../plugins/showreel/skills/showreel/engine/frames.mjs';
 
-const FILM = fileURLToPath(new URL('../plugins/showreel/skills/showreel/examples/claude-motion-designer', import.meta.url));
+const EXAMPLES = fileURLToPath(new URL('../plugins/showreel/skills/showreel/examples', import.meta.url));
 const GOLDEN = fileURLToPath(new URL('./golden', import.meta.url));
-const TIMES = [1.0, 9.75, 18.25, 27.25];
+const FILMS = { 'claude-motion-designer': [1.0, 9.75, 18.25, 27.25], 'kiln-and-co': [0.9, 2.6, 5.7, 8.1] };
 
 // Goldens are gzipped raw RGBA at quarter scale with the wobble frozen, so the
 // comparison is per pixel and independent of any PNG encoder. They live outside
 // the plugin folder so installs do not carry them.
-test('reference film matches its golden frames', async () => {
-  const r = await openRenderer(FILM);
+for (const [film, TIMES] of Object.entries(FILMS)) test(`${film} matches its golden frames`, async () => {
+  const r = await openRenderer(`${EXAMPLES}/${film}`);
   try {
     for (const t of TIMES) {
-      const file = `${GOLDEN}/t-${t.toFixed(3).padStart(6, '0')}.rgba.gz`;
+      const file = `${GOLDEN}/${film === 'claude-motion-designer' ? '' : film + '-'}t-${t.toFixed(3).padStart(6, '0')}.rgba.gz`;
       const px = await r.pixels(t, { frozen: true, scale: 0.25 });
       if (process.env.UPDATE_GOLDEN) {
         fs.mkdirSync(GOLDEN, { recursive: true });
