@@ -29,6 +29,8 @@ export async function boot(canvas, filmUrl) {
   const film = mod.default;
   const missing = REQUIRED.filter(k => film?.[k] === undefined);
   if (missing.length) throw new Error(`${filmUrl} default export is missing: ${missing.join(', ')}`);
+  // The slug names output files, so it must not carry path parts.
+  if (!/^[a-z0-9-]+$/.test(film.slug)) throw new Error(`slug "${film.slug}" must be lowercase letters, digits and dashes`);
   if (film.barNames.length !== film.bars) throw new Error(`barNames has ${film.barNames.length} names for ${film.bars} bars`);
   const clock = makeClock({ bpm: film.bpm, bars: film.bars });
   const fonts = { black, xbold, semi };

@@ -6,7 +6,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import ffmpeg from 'ffmpeg-static';
 import { exportFilm } from '../export.mjs';
-import { writeStills } from '../stills.mjs';
+import { writeStills, writeBarStills } from '../stills.mjs';
 import { newFilm } from '../new-film.mjs';
 
 const copyFixture = name => {
@@ -41,4 +41,17 @@ test('scaffolds a film that renders and refuses to overwrite it', async () => {
   assert.ok(fs.existsSync(path.join(dir, 'bars', '02.js')));
   assert.equal((await writeStills(dir, [1])).length, 1);
   assert.throws(() => newFilm(root, 'test-film'), /already exists/);
+});
+
+test('a slug with path parts is refused before anything is written', async () => {
+  const dir = copyFixture('bad-slug');
+  await assert.rejects(exportFilm(dir, { frames: [0, 2] }), /slug/);
+  assert.ok(!fs.existsSync(path.join(dir, '..', 'escape.mp4')));
+});
+
+test('bar stills come from the renderer, not a node import of the film', async () => {
+  const dir = copyFixture('ok');
+  fs.writeFileSync(path.join(dir, 'scenes.js'), fs.readFileSync(path.join(dir, 'scenes.js'), 'utf8') + "\nif (typeof process !== 'undefined') process.exit(7);\n");
+  const paths = await writeBarStills(dir);
+  assert.deepEqual(paths.map(p => path.basename(p)), ['t-00.250.png', 't-01.000.png']);
 });
