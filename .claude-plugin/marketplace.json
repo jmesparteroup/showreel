@@ -1,0 +1,7 @@
+{
+  "name": "showreel",
+  "owner": { "name": "Joshua Espartero" },
+  "plugins": [
+    { "name": "showreel", "source": "./plugins/showreel", "description": "Turn a subject and a one-line concept into a looping, beat-locked motion design film." }
+  ]
+}

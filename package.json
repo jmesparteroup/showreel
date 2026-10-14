@@ -1,0 +1,11 @@
+{
+  "name": "showreel",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "npm --prefix plugins/showreel/skills/showreel/engine install && npx --prefix plugins/showreel/skills/showreel/engine playwright install chromium",
+    "test": "npm --prefix plugins/showreel/skills/showreel/engine test && node --test test/",
+    "check:example": "node plugins/showreel/skills/showreel/engine/check.mjs examples/claude-motion-designer",
+    "export:example": "node plugins/showreel/skills/showreel/engine/export.mjs examples/claude-motion-designer"
+  }
+}
