@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
 import { runChecks } from '../check.mjs';
 
-const fixture = name => new URL(`./fixtures/${name}`, import.meta.url).pathname;
+const fixture = name => fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
 const byName = rs => Object.fromEntries(rs.map(r => [r.name, r]));
 
 test('a clean film passes every check', async () => {

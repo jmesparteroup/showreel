@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
 import { openRenderer } from '../frames.mjs';
 
-const fixture = name => new URL(`./fixtures/${name}`, import.meta.url).pathname;
+const fixture = name => fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
 
 test('renders a PNG frame and reports meta', async () => {
   const r = await openRenderer(fixture('ok'));
@@ -105,7 +106,7 @@ test('a syntax error in a film module names the file and line', async () => {
 
 test('a broken engine module fails fast and names the module', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'engine-copy-'));
-  const engine = new URL('..', import.meta.url).pathname;
+  const engine = fileURLToPath(new URL('..', import.meta.url));
   fs.cpSync(engine, path.join(root, 'engine'), { recursive: true, filter: src => !src.includes('node_modules') && !src.includes(`${path.sep}test${path.sep}`) });
   fs.symlinkSync(path.join(engine, 'node_modules'), path.join(root, 'engine', 'node_modules'));
   fs.symlinkSync(path.join(engine, '..', 'fonts'), path.join(root, 'fonts'));

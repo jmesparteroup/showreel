@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
 import { openRenderer } from '../frames.mjs';
 
-const fixture = name => new URL(`./fixtures/${name}`, import.meta.url).pathname;
+const fixture = name => fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
 const at = (px, x, y) => { const i = (y * px.width + x) * 4; return [...px.data.subarray(i, i + 3)]; };
 const close = (rgb, hex, tol = 30) => {
   const want = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));

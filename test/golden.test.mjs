@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import zlib from 'node:zlib';
+import { fileURLToPath } from 'node:url';
 import { openRenderer } from '../plugins/showreel/skills/showreel/engine/frames.mjs';
 
-const FILM = new URL('../plugins/showreel/skills/showreel/examples/claude-motion-designer', import.meta.url).pathname;
-const GOLDEN = new URL('./golden', import.meta.url).pathname;
+const FILM = fileURLToPath(new URL('../plugins/showreel/skills/showreel/examples/claude-motion-designer', import.meta.url));
+const GOLDEN = fileURLToPath(new URL('./golden', import.meta.url));
 const TIMES = [1.0, 9.75, 18.25, 27.25];
 
 // Goldens are gzipped raw RGBA at quarter scale with the wobble frozen, so the
@@ -23,9 +24,17 @@ test('reference film matches its golden frames', async () => {
         continue;
       }
       const want = zlib.gunzipSync(fs.readFileSync(file));
-      let d = 0;
-      for (let i = 0; i < want.length; i++) d += Math.abs(want[i] - px.data[i]);
-      assert.ok(d / want.length < 2, `t=${t}: mean diff ${(d / want.length).toFixed(2)} exceeds 2/255`);
+      // Worst 8 x 8 block, so a change to one small element fails instead of averaging away.
+      let worst = 0;
+      for (let by = 0; by < px.height; by += 8)
+        for (let bx = 0; bx < px.width; bx += 8) {
+          let d = 0, n = 0;
+          for (let y = by; y < Math.min(by + 8, px.height); y++)
+            for (let x = bx; x < Math.min(bx + 8, px.width); x++)
+              for (let c = 0; c < 3; c++) { const i = (y * px.width + x) * 4 + c; d += Math.abs(want[i] - px.data[i]); n++; }
+          worst = Math.max(worst, d / n);
+        }
+      assert.ok(worst <= 12, `t=${t}: an 8 x 8 block differs by ${worst.toFixed(1)}/255 (limit 12)`);
     }
   } finally { await r.close(); }
 });
