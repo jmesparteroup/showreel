@@ -13,10 +13,15 @@ const TYPES = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.html': 't
 
 function serve(mounts) {
   const server = http.createServer((req, res) => {
+    // Only answer to the exact loopback origin, so a page that rebinds its own
+    // domain to 127.0.0.1 cannot read the film or engine files.
+    if (req.headers.host !== `127.0.0.1:${server.address().port}`) { res.writeHead(403).end(); return; }
     const { pathname } = new URL(req.url, 'http://x');
     for (const [prefix, dir] of mounts) {
       if (!pathname.startsWith(prefix + '/')) continue;
-      const file = path.resolve(dir, decodeURIComponent(pathname.slice(prefix.length + 1)));
+      let rel;
+      try { rel = decodeURIComponent(pathname.slice(prefix.length + 1)); } catch { res.writeHead(400).end(); return; }
+      const file = path.resolve(dir, rel);
       if (!file.startsWith(dir + path.sep)) { res.writeHead(403).end(); return; }
       fs.readFile(file, (err, body) => {
         if (err) { res.writeHead(404).end(`${pathname} not found`); return; }

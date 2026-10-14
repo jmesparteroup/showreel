@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import http from 'node:http';
 import { openRenderer } from '../frames.mjs';
 
 const fixture = name => new URL(`./fixtures/${name}`, import.meta.url).pathname;
@@ -55,4 +56,41 @@ test('t = duration renders and wraps the labels', async () => {
     for (let i = 0; i < a.data.length; i++) diff += Math.abs(a.data[i] - b.data[i]);
     assert.ok(diff / a.data.length < 1, 'frame at t = duration differs from frame 0');
   } finally { await r.close(); }
+});
+
+test('preview server rejects requests for another host name', async () => {
+  const { serveFilm } = await import('../frames.mjs');
+  const site = await serveFilm(fixture('ok'));
+  try {
+    const { port } = new URL(site.url);
+    const res = await new Promise((resolve, reject) => {
+      const req = http.get({ host: '127.0.0.1', port, path: '/film/scenes.js', headers: { host: 'evil.example' } }, resolve);
+      req.on('error', reject);
+    });
+    assert.equal(res.statusCode, 403);
+  } finally { await site.close(); }
+});
+
+test('preview server survives a malformed escape in the path', async () => {
+  const { serveFilm } = await import('../frames.mjs');
+  const site = await serveFilm(fixture('ok'));
+  try {
+    const base = new URL(site.url).origin;
+    assert.equal((await fetch(`${base}/film/%E0%A4%A`)).status, 400);
+    assert.equal((await fetch(`${base}/film/scenes.js`)).status, 200);
+  } finally { await site.close(); }
+});
+
+test('host page refuses a film from outside /film/', async () => {
+  const { serveFilm } = await import('../frames.mjs');
+  const { chromium } = await import('playwright');
+  const site = await serveFilm(fixture('ok'));
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    const url = site.url.replace('film=/film/scenes.js', 'film=' + encodeURIComponent('data:text/javascript,export default 1'));
+    await page.goto(url);
+    await page.waitForFunction(() => window.__ready || window.__error);
+    assert.match(await page.evaluate(() => window.__error), /film must be served from \/film\//);
+  } finally { await browser.close(); await site.close(); }
 });

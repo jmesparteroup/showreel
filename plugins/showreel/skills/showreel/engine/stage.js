@@ -19,6 +19,7 @@ async function loadFont(url) {
 const REQUIRED = ['slug', 'bpm', 'bars', 'barNames', 'cues', 'palette', 'draw'];
 
 export async function boot(canvas, filmUrl) {
+  if (!/^\/film\/[\w./-]+\.js$/.test(filmUrl ?? '') || filmUrl.includes('..')) throw new Error(`film must be served from /film/, got ${filmUrl}`);
   const [mod, black, xbold, semi] = await Promise.all([
     import(filmUrl),
     loadFont('/fonts/Geist-Black.otf'),
