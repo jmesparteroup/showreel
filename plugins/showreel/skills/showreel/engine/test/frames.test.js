@@ -94,3 +94,7 @@ test('host page refuses a film from outside /film/', async () => {
     assert.match(await page.evaluate(() => window.__error), /film must be served from \/film\//);
   } finally { await browser.close(); await site.close(); }
 });
+
+test('a film importing a missing module names the missing file', async () => {
+  await assert.rejects(openRenderer(fixture('missing-import')), /bars\/02\.js/);
+});

@@ -55,10 +55,19 @@ export async function openRenderer(filmDir, { pages = 1 } = {}) {
   }
   const open = async () => {
     const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+    // The browser reports a failed module import without naming the file, so
+    // keep the failed requests and console errors to add to the message.
+    const problems = [];
+    const onResponse = res => { if (res.status() >= 400) problems.push(`${res.status()} ${new URL(res.url()).pathname}`); };
+    const onConsole = msg => { if (msg.type() === 'error' && !msg.text().startsWith('Failed to load resource')) problems.push(msg.text()); };
+    page.on('response', onResponse);
+    page.on('console', onConsole);
     await page.goto(site.url + '&headless=1');
     await page.waitForFunction(() => window.__ready || window.__error, null, { timeout: 60000 });
     const err = await page.evaluate(() => window.__error);
-    if (err) throw new Error(err);
+    page.off('response', onResponse);
+    page.off('console', onConsole);
+    if (err) throw new Error([err, ...problems].join('\n'));
     return page;
   };
   const list = [];
