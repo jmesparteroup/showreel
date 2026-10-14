@@ -3,12 +3,9 @@ import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { openRenderer } from './frames.mjs';
 
-const MARGIN = { x: 150, y: 90 };
 const SWEEP_SCALE = 0.25;
-const HOLD_LIMIT = 30; // frames at 60 fps = 0.5 s
 const PALETTE_TOL = 48;
 const PALETTE_MAX_OUT = 0.005;
-const PALETTE_EVERY = 6; // frames: ten samples a second
 const BLOCK = 8;
 const BLOCK_MAX = 12; // mean level difference allowed in any 8 x 8 block at the seam
 
@@ -91,6 +88,11 @@ export async function runChecks(filmDir, { only, range, workers = Math.max(1, Ma
   const results = [];
   try {
     const m = r.meta;
+    const [W, H] = m.size;
+    // The empty border is 150 x 90 px at 1920 x 1080, scaled to the film's size.
+    const MARGIN = { x: (W * 150) / 1920, y: (H * 90) / 1080 };
+    const HOLD_LIMIT = Math.round(m.fps / 2);
+    const PALETTE_EVERY = Math.max(1, Math.round(m.fps / 10));
     if (want('beats')) results.push(checkBeats(m));
     if (want('loop')) {
       const a = await r.pixels(0, { frozen: true, scale: 0.5 });
@@ -116,7 +118,7 @@ export async function runChecks(filmDir, { only, range, workers = Math.max(1, Ma
           if (i === f1 - 1) last = px;
           restCount += px.rest.length;
           for (const box of px.rest)
-            if (box.x < MARGIN.x - 0.5 || box.y < MARGIN.y - 0.5 || box.x + box.w > 1920 - MARGIN.x + 0.5 || box.y + box.h > 1080 - MARGIN.y + 0.5)
+            if (box.x < MARGIN.x - 0.5 || box.y < MARGIN.y - 0.5 || box.x + box.w > W - MARGIN.x + 0.5 || box.y + box.h > H - MARGIN.y + 0.5)
               borderHits.push(`t=${t.toFixed(3)} rest box ${JSON.stringify(box)}`);
           if (prev) same[i] = identical(prev, px, px.labels);
           if (want('palette') && i % PALETTE_EVERY === 0) {

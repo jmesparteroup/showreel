@@ -1,0 +1,11 @@
+{
+  "name": "Acme",
+  "palette": { "ink": "#111014", "paper": "#F4F1EA", "primary": "#FF5A1F", "secondary": "#2E5BFF" },
+  "fonts": { "display": "geist:900", "label": "geist:600" },
+  "inks": [
+    { "name": "SKETCH", "bg": { "color": "paper", "grain": 0.05 }, "grid": null,
+      "line": { "style": "marker", "color": "ink", "width": 10 }, "fill": { "style": "dots", "color": "primary" }, "accent": "primary" },
+    { "name": "SOLID", "bg": { "color": "primary" }, "grid": { "color": "paper", "step": 80, "opacity": [0.1, 0.2] },
+      "line": { "style": "clean", "color": "paper", "width": 10 }, "fill": { "style": "solid", "color": "ink" }, "accent": "secondary" }
+  ]
+}

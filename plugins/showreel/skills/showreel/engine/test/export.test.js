@@ -55,3 +55,12 @@ test('bar stills come from the renderer, not a node import of the film', async (
   const paths = await writeBarStills(dir);
   assert.deepEqual(paths.map(p => path.basename(p)), ['t-00.250.png', 't-01.000.png']);
 });
+
+test('a film directory with % in its name exports at the film frame rate', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), '100% films '));
+  fs.copyFileSync(new URL('./fixtures/format/scenes.js', import.meta.url), path.join(dir, 'scenes.js'));
+  const mp4 = await exportFilm(dir, { frames: [0, 6] });
+  const r = spawnSync(ffmpeg, ['-i', mp4], { encoding: 'utf8' });
+  assert.match(r.stderr, /\b30 fps\b/);
+  assert.match(r.stderr, /1080x1920/);
+});

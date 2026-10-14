@@ -76,7 +76,7 @@ export async function openRenderer(filmDir, { pages = 1 } = {}) {
     throw new Error(`Chromium failed to launch. Run: npx --prefix ${ENGINE} playwright install chromium\n${e.message}`);
   }
   const open = async () => {
-    const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+    const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
     // The browser reports a failed module import without naming the file, so
     // keep the failed requests and console errors to add to the message.
     const problems = [];
@@ -110,9 +110,11 @@ export async function openRenderer(filmDir, { pages = 1 } = {}) {
   }
 
   const meta = await list[0].evaluate(() => {
-    const { film, clock } = window.__stage;
+    const { film, clock, brand, size, palette } = window.__stage;
     return {
-      slug: film.slug, bpm: film.bpm, bars: film.bars, barNames: film.barNames, cues: film.cues, palette: film.palette,
+      slug: film.slug, bpm: film.bpm, bars: film.bars, barNames: film.barNames, cues: film.cues, palette,
+      sounds: film.sounds ?? null, size, beatsPerBar: clock.beatsPerBar,
+      brand: { name: brand.name, inkNames: brand.inkNames, sound: brand.sound, warnings: brand.warnings },
       duration: clock.duration, frames: clock.frames, fps: clock.fps, spb: clock.spb, totalBeats: clock.totalBeats,
     };
   });

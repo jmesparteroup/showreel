@@ -7,9 +7,9 @@ import { fileURLToPath } from 'node:url';
 import ffmpeg from 'ffmpeg-static';
 import { openRenderer } from './frames.mjs';
 
-function run(cmd, args) {
+function run(cmd, args, cwd) {
   return new Promise((resolve, reject) => {
-    const p = spawn(cmd, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    const p = spawn(cmd, args, { cwd, stdio: ['ignore', 'ignore', 'pipe'] });
     let err = '';
     p.stderr.on('data', d => { err += d; });
     p.on('close', code => (code === 0 ? resolve() : reject(new Error(`ffmpeg exited ${code}\n${err.slice(-2000)}`))));
@@ -35,7 +35,8 @@ export async function exportFilm(filmDir, { out, workers = Math.max(1, Math.min(
     }));
     if (done >= 60) process.stderr.write('\n');
     const mp4 = out ?? path.join(filmDir, 'out', `${slug}.mp4`);
-    await run(ffmpeg, ['-y', '-framerate', String(fps), '-i', path.join(dir, '%05d.png'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '16', '-movflags', '+faststart', mp4]);
+    // ffmpeg reads -i as a pattern, so a % anywhere in the path would break it; run it in the frames folder instead.
+    await run(ffmpeg, ['-y', '-framerate', String(fps), '-i', '%05d.png', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '16', '-movflags', '+faststart', path.resolve(mp4)], dir);
     // A full film is about a gigabyte of PNGs; the MP4 is the deliverable.
     fs.rmSync(dir, { recursive: true, force: true });
     return mp4;

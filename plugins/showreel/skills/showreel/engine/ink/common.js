@@ -17,20 +17,22 @@ export function toPath(contours) {
 
 export const toContours = shape => (typeof shape[0][0] === 'number' ? [shape] : shape);
 
-// Grid lines are centred on the frame so the middle lines sit at x = 960 and
-// y = 540 and every fifth line from the centre is major.
-export function drawGrid(ctx, rgb, minor = 0.13, major = 0.26, step = 60) {
+// Grid lines are centred on the frame so the middle lines cross at its centre
+// and every fifth line from the centre is major.
+export function drawGrid(ctx, rgb, minor = 0.13, major = 0.26, step = 60, W = 1920, H = 1080) {
+  const cx = W / 2, cy = H / 2;
+  const kx = Math.ceil(cx / step), ky = Math.ceil(cy / step);
   ctx.save();
   ctx.lineWidth = 1;
-  for (let k = -16; k <= 16; k++) {
-    const x = 960 + k * step;
+  for (let k = -kx; k <= kx; k++) {
+    const x = cx + k * step;
     ctx.strokeStyle = `rgba(${rgb},${k % 5 === 0 ? major : minor})`;
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 1080); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
   }
-  for (let k = -9; k <= 9; k++) {
-    const y = 540 + k * step;
+  for (let k = -ky; k <= ky; k++) {
+    const y = cy + k * step;
     ctx.strokeStyle = `rgba(${rgb},${k % 5 === 0 ? major : minor})`;
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(1920, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
   }
   ctx.restore();
 }
@@ -44,14 +46,31 @@ export function bbox(contours) {
   return b;
 }
 
-// Lines are anchored to the shape's bbox centre so hatching travels with the shape.
-export function hatchLines(contours, angle, spacing) {
-  const b = bbox(contours);
-  const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
-  const R = Math.hypot(b.x1 - b.x0, b.y1 - b.y0) / 2 + spacing;
+// Lines sit on a lattice anchored to the frame origin: line k is the set of points
+// whose distance along the normal is k * spacing. A shape that grows or moves keeps
+// the same lines (and ids) under its interior. Each line carries its lattice index
+// `k` and `s0`, its start's distance along the hatch direction, so wobble can be
+// measured from a fixed origin too.
+export function hatchLines(contours, angle, spacing, { fixedEnds = false } = {}) {
   const dx = Math.cos(angle), dy = Math.sin(angle), nx = -dy, ny = dx;
+  let n0 = Infinity, n1 = -Infinity, t0 = Infinity, t1 = -Infinity;
+  for (const c of contours) for (const [x, y] of c) {
+    const pn = x * nx + y * ny, pt = x * dx + y * dy;
+    if (pn < n0) n0 = pn; if (pn > n1) n1 = pn;
+    if (pt < t0) t0 = pt; if (pt > t1) t1 = pt;
+  }
+  // Clean lines get fixed frame-wide ends: Skia rasterises a straight line slightly
+  // differently when only its length changes. Sketchy lines are resampled, so they
+  // stay short and start on the lattice instead.
+  const a = fixedEnds ? -8192 : Math.floor(t0 / spacing) * spacing - spacing;
+  const b = fixedEnds ? 8192 : Math.ceil(t1 / spacing) * spacing + spacing;
   const lines = [];
-  for (let d = -R; d <= R; d += spacing)
-    lines.push([[cx + nx * d - dx * R, cy + ny * d - dy * R], [cx + nx * d + dx * R, cy + ny * d + dy * R]]);
+  for (let k = Math.floor(n0 / spacing); k * spacing <= n1; k++) {
+    const d = k * spacing;
+    const line = [[nx * d + dx * a, ny * d + dy * a], [nx * d + dx * b, ny * d + dy * b]];
+    line.k = k;
+    line.s0 = a;
+    lines.push(line);
+  }
   return lines;
 }

@@ -1,0 +1,2 @@
+{ "name": "Bad", "palette": { "a": "#EDE6D5", "b": "#16161A" }, "fonts": { "label": "fonts/bad.otf" },
+  "inks": [{ "name": "paper", "preset": "paper" }] }
