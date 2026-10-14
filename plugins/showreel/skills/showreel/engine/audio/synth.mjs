@@ -4,7 +4,9 @@
 // that run past the end come back in at the start and the audio loops like the picture.
 import { rand } from '../rng.js';
 
-export const SOUND_KINDS = ['hit', 'whoosh', 'click', 'tick', 'press', 'sweep', 'type', 'pop', 'none'];
+import { SOUND_KINDS } from '../brand.js';
+
+export { SOUND_KINDS };
 const SEMITONE = { C: 0, 'C#': 1, Db: 1, D: 2, 'D#': 3, Eb: 3, E: 4, F: 5, 'F#': 6, Gb: 6, G: 7, 'G#': 8, Ab: 8, A: 9, 'A#': 10, Bb: 10, B: 11 };
 const hz = midi => 440 * 2 ** ((midi - 69) / 12);
 
@@ -24,7 +26,10 @@ const STYLES = {
 export function renderScore({ duration, bpm, beatsPerBar, bars, sounds = [], style = 'minimal', key = { root: 'A', mode: 'minor' }, sampleRate = 48000, gain = 1 }) {
   const SR = sampleRate;
   const N = Math.round(duration * SR);
-  const L = new Float32Array(N), R = new Float32Array(N);
+  // Music and effects are separate buses: the music is levelled by loudness, the effects
+  // keep a fixed level, so adding a sound never changes the music and a lone sound is not blown up.
+  const bus = { music: [new Float32Array(N), new Float32Array(N)], fx: [new Float32Array(N), new Float32Array(N)] };
+  let L = bus.fx[0], R = bus.fx[1];
   const noise = rand('audio-noise', 1);
 
   // Writes voice(x) for x in [0, len) seconds starting at t, panned, wrapping at the loop point.
@@ -95,6 +100,7 @@ export function renderScore({ duration, bpm, beatsPerBar, bars, sounds = [], sty
 
   const st = STYLES[style];
   if (st === undefined) throw new Error(`sound style "${style}" is not one of ${Object.keys(STYLES).join(', ')}`);
+  [L, R] = bus.music;
   if (st) {
     const spb = 60 / bpm, barDur = spb * beatsPerBar;
     const root = 45 + SEMITONE[key.root]; // around A2
@@ -120,14 +126,17 @@ export function renderScore({ duration, bpm, beatsPerBar, bars, sounds = [], sty
     }
   }
 
-  // Levelled by loudness, not by the single loudest hit: gain to a fixed RMS, then a
-  // tanh limiter so peaks round off under 0.89 instead of clipping. Silence stays silent.
+  // Music to a fixed loudness (RMS 0.16), effects at 0.8 of their drawn level; then a
+  // tanh limiter rounds any peak off under 0.89 instead of clipping.
   let sum = 0;
-  for (let i = 0; i < N; i++) sum += L[i] * L[i] + R[i] * R[i];
+  for (let i = 0; i < N; i++) sum += bus.music[0][i] ** 2 + bus.music[1][i] ** 2;
   const level = Math.sqrt(sum / (2 * N));
-  if (level > 0) {
-    const k = (0.16 * Math.min(1, gain)) / level;
-    for (let i = 0; i < N; i++) { L[i] = 0.89 * Math.tanh((L[i] * k) / 0.89); R[i] = 0.89 * Math.tanh((R[i] * k) / 0.89); }
-  }
-  return [L, R];
+  const km = level > 0 ? (0.16 * gain) / level : 0;
+  const out = [new Float32Array(N), new Float32Array(N)];
+  for (let c = 0; c < 2; c++)
+    for (let i = 0; i < N; i++) {
+      const v = bus.music[c][i] * km + bus.fx[c][i] * 0.8 * gain;
+      out[c][i] = v === 0 ? 0 : 0.89 * Math.tanh(v / 0.89);
+    }
+  return out;
 }

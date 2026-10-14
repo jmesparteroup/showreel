@@ -34,7 +34,7 @@ The film's look and sound come from the subject's brand, never from a default. F
 If there is none, ask once for a URL or a folder, and offer inline words as the fallback. Then:
 
 ```bash
-node ENGINE/new-film.mjs <slug> --size 1920x1080 --fps 60 --bpm 120 --bars 15
+node ENGINE/new-film.mjs <slug> --size 1920x1080 --fps 60 --bpm 120 --bars 15 --beats-per-bar 4
 ```
 
 Choose the format from where the film will be shown: 1080x1920 at 30 fps for stories and reels, 1080x1080 or 1080x1350 for feeds, 1920x1080 at 60 fps for sites and decks. Ask only if that matters and is unknown.
@@ -59,7 +59,7 @@ Read `reference/house-rules.md`, `reference/brief-format.md` and both example br
 
 - Copy the house rules in, as written, with the border sizes for this film's frame.
 - The palette, inks, typefaces and sound come from brand.json.
-- Write the storyboard: one entry per bar, a cue on every beat, and exact numbers for every move (px, degrees, counts, radii). Bar N starts from bar N-1's last state. The last bar rebuilds frame 0.
+- Write the storyboard: one entry per bar, a cue on every beat (`beatsPerBar` per bar), and exact numbers for every move (px, degrees, counts, radii). Bar N starts from bar N-1's last state. The last bar rebuilds frame 0.
 
 Then **stop**. Show the user the swatches, the brand summary (palette, fonts, inks, sound) and the storyboard, and ask for approval or edits. Write no scene code before approval.
 

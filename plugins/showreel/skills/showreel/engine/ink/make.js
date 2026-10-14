@@ -6,6 +6,7 @@ import { length, resample } from '../geom.js';
 import { drawGrid, tracePath, toPath, hatchLines, bbox } from './common.js';
 
 const rgb = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)).join(',');
+const luminance = hex => { const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
 
 const textures = new Map();
 let layer;
@@ -47,9 +48,11 @@ function wobble(pts, amp, seed, s0 = 0) {
 
 export function makeInk(spec, ctx, { t, frozen, size, palette = {}, images = {} }) {
   const [W, H] = size;
-  // Sketchy lines and grain draw on an offscreen layer that gets paper tooth
-  // knocked out and is multiplied onto the background at flush.
-  const layered = spec.line.style === 'pencil' || spec.line.style === 'marker' || spec.bg.grain > 0;
+  // Sketchy lines draw on an offscreen layer that gets paper tooth knocked out and is
+  // multiplied onto the background at flush; a light line on a dark ground is screened
+  // instead, since multiply can only darken.
+  const layered = spec.line.style === 'pencil' || spec.line.style === 'marker';
+  const blend = luminance(spec.line.color) > luminance(spec.bg.color) ? 'screen' : 'multiply';
   let L = ctx;
   if (layered) {
     const { width, height } = ctx.canvas;
@@ -225,7 +228,7 @@ export function makeInk(spec, ctx, { t, frozen, size, palette = {}, images = {} 
       L.restore();
       ctx.save();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.globalCompositeOperation = 'multiply';
+      ctx.globalCompositeOperation = blend;
       ctx.drawImage(layer, 0, 0);
       ctx.restore();
     },

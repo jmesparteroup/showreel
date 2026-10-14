@@ -34,14 +34,14 @@ The film's visual and sonic identity. It lives at `films/<slug>/brand.json`; the
 | `fonts.body` | Anything else. Defaults to the label face. |
 | `inks[]` | 1 to 6 stages, in film order. Films draw with `api.pen('<name>')`. |
 | `inks[].preset` | `paper`, `blueprint` or `hologram`, recoloured with `colors: { bg, grid, line, fill, accent, solid, core }`. Other fields override the preset's. |
-| `inks[].bg` | `{ color, grain?: 0–0.2, image?: "path/in/film.png" }`. The image is drawn cover-fit, under the grain and grid. |
+| `inks[].bg` | `{ color, grain?: 0–0.2, image?: "path/in/film.png" }`. The image (PNG, JPEG or WebP) is drawn cover-fit, under the grain and grid. A photographic image will fail the palette check; give that film its own `palette` list in `scenes.js` that includes the photo's colours, or use flat, palette-coloured artwork. |
 | `inks[].grid` | `null`, or `{ color, step: 20–400, opacity: [minor, major] }`, centred on the frame, every fifth line major. |
 | `inks[].line` | `{ style, color, width, core? }`. |
 | `inks[].fill` | `{ style, color, spacing?, width? }`. |
 | `inks[].type` | `{ fill: <fill style>, outline: none \| single \| double, spacing?, width? }`: how big type is drawn. |
 | `inks[].accent` | The colour `color: 'accent'` draws in. Convention: each stage's accent is the next stage's background or line colour; `swatch.mjs` notes where it is not. |
 | `inks[].solid` | The colour `color: 'solid'` draws in (eyes, small marks). Defaults to the line colour. |
-| `transitions` | Which scene changes the storyboard may use: `flood`, `scan`. |
+| `transitions` | Which scene changes the storyboard may use: `flood`, `scan`. Guidance for the brief; the engine does not enforce it. |
 | `sound` | `{ style, key, file?, offset?, gain? }`, below. |
 
 Run `node ENGINE/fetch-fonts.mjs films/<slug>` after adding `google:` fonts; it downloads TTFs into `films/<slug>/fonts/` and rewrites the entries to those paths. Rendering never touches the network.
@@ -50,8 +50,8 @@ Run `node ENGINE/fetch-fonts.mjs films/<slug>` after adding `google:` fonts; it 
 
 | `line.style` | Look | Draws |
 |---|---|---|
-| `pencil` | Graphite: two passes, wobble that steps 8 times a second, paper tooth knocked out, multiplied | sketch, hand, drafting |
-| `marker` | One thick pass, butt caps, a gentle hand wobble, multiplied | handmade, warm, editorial |
+| `pencil` | Graphite: two passes, wobble that steps 8 times a second, paper tooth knocked out; multiplied onto light grounds, screened onto dark ones | sketch, hand, drafting |
+| `marker` | One thick pass, butt caps, a gentle hand wobble; multiplied or screened like pencil | handmade, warm, editorial |
 | `clean` | Exact vector line, round caps | engineered, technical, corporate |
 | `dashed` | Clean line with dashes three widths long | diagrams, plans, maps |
 | `light` | A coloured edge with a core (default white) at 30 % width; no blur | night, tech, screens, neon |
@@ -93,6 +93,6 @@ Use two or three stages for a film of 15 bars, one or two for a short one. Order
 
 `sound.key` is `"<note> major|minor"`, e.g. `"D minor"`, `"Eb major"`: the bass, pad and plucks follow a four-bar progression in it.
 
-`sound.file` (a path inside the film folder) replaces the score with the brand's own track, looped and trimmed to the film's length from `offset` seconds. The film's BPM should match the track's.
+`sound.file` (a path inside the film folder) replaces the score with the brand's own track, looped and trimmed to the film's length from `offset` seconds (0 or more). The film's BPM should match the track's, and the film's `sounds` effects are not used. The track is not crossfaded at the loop point, so it loops cleanly only if its length is a whole number of film lengths.
 
 Sound effects come from the film's `sounds` list (see `film-api.md`); without one, every cue gets a soft tick.

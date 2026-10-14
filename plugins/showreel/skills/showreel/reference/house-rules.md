@@ -6,7 +6,7 @@ Every film inherits these. Copy the two blocks below into the brief's `<directio
 
 ```
 Every shot is made out of the previous one: shapes, type and colour transform into the next scene. No cuts, no fades.
-Typefaces: the brand's display face for big words, its label face for small labels (24 to 28 px at 1080 px high, scaled with the frame, tracked 0.14 to 0.3 em). Geist when the brand has none.
+Typefaces: the brand's display face for big words, its label face for small labels (24 to 28 px when the frame's short side is 1080 px, scaled with it, tracked 0.14 to 0.3 em). Geist when the brand has none.
 Camera: locked and front-on for the whole film, like a drafting table. Objects turn; the camera never moves.
 Empty border: nothing at rest within {border x} px of the sides or {border y} px of the top and bottom (7.8 % of the width and 8.3 % of the height: 150 x 90 at 1920 x 1080, 84 x 160 at 1080 x 1920). Things travelling through may cross it.
 Banned: particle bursts, glows, lens flares, camera shake, RGB split, crossfades, generic gradients, bouncy easing, holds longer than half a second, anything that looks like a template.

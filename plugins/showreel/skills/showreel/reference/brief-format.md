@@ -34,7 +34,7 @@ Frame 0: {exact layout of the opening frame: positions, sizes, text}.
 
 ## Storyboard rules
 
-1. Every beat has a cue: four per bar, at bar start + 0, 0.5, 1.0 and 1.5 s at 120 BPM.
+1. Every beat has a cue: one per beat, `beats per bar` per bar (at 120 BPM in 4/4: bar start + 0, 0.5, 1.0 and 1.5 s).
 2. Every cue names a geometric operation: draw, split, bend, curl, morph, tile, extrude, turn, unfold, fill, retract, press, sweep, type on, un-type. "Appears" and "fades" are not operations.
 3. Each bar starts from the geometry the previous bar ended with. State the handoff in the bar's first cue ("the hexagon shrinks...", not "a hexagon appears").
 4. Give numbers for everything a renderer must place: px, radii, angles, counts, spacing, durations.
@@ -45,7 +45,7 @@ Frame 0: {exact layout of the opening frame: positions, sizes, text}.
 
 ## Checklist before showing the brief
 
-- [ ] Every bar has four cues
+- [ ] Every beat has a cue
 - [ ] Every bar's first cue continues the previous bar's last state
 - [ ] Nothing rests inside the empty border
 - [ ] Palette, typefaces, inks and sound match brand.json

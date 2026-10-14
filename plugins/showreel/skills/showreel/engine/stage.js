@@ -6,7 +6,7 @@ import * as type from './type.js';
 import { makePen } from './ink/index.js';
 import { drawLabels, labelBoxes, borderOf } from './labels.js';
 import { mascot } from './mascot.js';
-import { loadBrand, DEFAULT_BRAND, fontURL } from './brand.js';
+import { loadBrand, DEFAULT_BRAND, fontURL, checkSounds } from './brand.js';
 
 const parse = opentype.parse ?? opentype.default.parse;
 const FPS = [24, 25, 30, 48, 50, 60];
@@ -36,7 +36,11 @@ async function loadImage(path) {
   const url = '/film/' + path.split('/').map(encodeURIComponent).join('/');
   const res = await fetch(url);
   if (!res.ok) throw new Error(`image ${url}: HTTP ${res.status}`);
-  return createImageBitmap(await res.blob());
+  try {
+    return await createImageBitmap(await res.blob());
+  } catch (e) {
+    throw new Error(`image ${url}: ${e.message} (use PNG, JPEG or WebP)`);
+  }
 }
 
 const REQUIRED = ['slug', 'bpm', 'bars', 'barNames', 'cues', 'draw'];
@@ -71,6 +75,7 @@ export async function boot(canvas, filmUrl) {
 
   const size = [W, H];
   const clock = makeClock({ bpm: film.bpm, bars: film.bars, beatsPerBar, fps });
+  checkSounds(film.sounds, clock.duration);
   const palette = film.palette ?? Object.values(brand.palette);
   const border = borderOf(size);
 

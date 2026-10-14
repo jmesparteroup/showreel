@@ -10,7 +10,7 @@ export const ENGINE = path.dirname(fileURLToPath(import.meta.url));
 const SKILL = path.dirname(ENGINE);
 const require = createRequire(import.meta.url);
 const OPENTYPE = path.join(path.dirname(require.resolve('opentype.js/package.json')), 'dist');
-const TYPES = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.html': 'text/html', '.otf': 'font/otf', '.ttf': 'font/ttf', '.png': 'image/png', '.json': 'application/json' };
+const TYPES = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.html': 'text/html', '.otf': 'font/otf', '.ttf': 'font/ttf', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.json': 'application/json' };
 
 function serve(mounts) {
   const server = http.createServer((req, res) => {

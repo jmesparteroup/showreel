@@ -6,6 +6,10 @@ export const FILL_STYLES = ['hatch', 'cross', 'scan', 'dots', 'solid', 'none'];
 export const OUTLINES = ['none', 'single', 'double'];
 export const TRANSITIONS = ['flood', 'scan'];
 export const SOUND_STYLES = ['minimal', 'electronic', 'organic', 'none'];
+export const SOUND_KINDS = ['hit', 'whoosh', 'click', 'tick', 'press', 'sweep', 'type', 'pop', 'none'];
+const FONT_ROLES = ['display', 'label', 'body'];
+const INK_FIELDS = ['name', 'preset', 'colors', 'bg', 'grid', 'line', 'fill', 'type', 'accent', 'solid'];
+const SUB_FIELDS = { bg: ['color', 'grain', 'image'], grid: ['color', 'step', 'opacity'], line: ['style', 'color', 'width', 'core'], fill: ['style', 'color', 'spacing', 'width'], type: ['fill', 'outline', 'spacing', 'width'], colors: ['bg', 'grid', 'line', 'fill', 'accent', 'solid', 'core'] };
 export const GEIST_WEIGHTS = { 400: 'Regular', 500: 'Medium', 600: 'SemiBold', 700: 'Bold', 800: 'ExtraBold', 900: 'Black' };
 const NOTES = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
 
@@ -98,6 +102,14 @@ export function loadBrand(json) {
   const inks = {}, inkNames = [];
   list.forEach((raw, i) => {
     const p = `inks[${i}]`;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) fail(p, 'must be an object');
+    // Unknown fields are almost always typos ("colour"); silently ignoring them renders the wrong look.
+    for (const k of Object.keys(raw)) if (!INK_FIELDS.includes(k)) fail(`${p}.${k}`, `unknown field; use ${INK_FIELDS.join(', ')}`);
+    for (const [sub, keys] of Object.entries(SUB_FIELDS)) {
+      if (raw[sub] === undefined || raw[sub] === null) continue;
+      if (typeof raw[sub] !== 'object' || Array.isArray(raw[sub])) fail(`${p}.${sub}`, 'must be an object');
+      for (const k of Object.keys(raw[sub])) if (!keys.includes(k)) fail(`${p}.${sub}.${k}`, `unknown field; use ${keys.join(', ')}`);
+    }
     if (typeof raw.name !== 'string' || !/^[A-Za-z][\w-]*$/.test(raw.name)) fail(`${p}.name`, 'must be a word starting with a letter');
     if (inks[raw.name]) fail(`${p}.name`, `"${raw.name}" is used twice`);
     let base = {};
@@ -111,7 +123,11 @@ export function loadBrand(json) {
     ink.grid = grid && {
       color: color(`${p}.grid.color`, raw.colors?.grid ?? grid.color),
       step: num(`${p}.grid.step`, grid.step, 20, 400, 60),
-      opacity: (grid.opacity ?? [0.13, 0.26]).map((o, k) => num(`${p}.grid.opacity[${k}]`, o, 0, 1)),
+      opacity: (() => {
+        const o = grid.opacity ?? [0.13, 0.26];
+        if (!Array.isArray(o) || o.length !== 2) fail(`${p}.grid.opacity`, 'must be [minor, major], two numbers from 0 to 1');
+        return o.map((v, k) => num(`${p}.grid.opacity[${k}]`, v, 0, 1));
+      })(),
     };
     const line = { ...base.line, ...raw.line };
     const ls = oneOf(`${p}.line.style`, line.style, LINE_STYLES);
@@ -143,6 +159,7 @@ export function loadBrand(json) {
   });
 
   const f = json.fonts ?? {};
+  for (const k of Object.keys(f)) if (!FONT_ROLES.includes(k)) fail(`fonts.${k}`, `unknown font role; use ${FONT_ROLES.join(', ')}`);
   const label = parseFont('fonts.label', f.label, { kind: 'geist', weight: 800 });
   const fonts = {
     display: parseFont('fonts.display', f.display, { kind: 'geist', weight: 900 }),
@@ -150,7 +167,9 @@ export function loadBrand(json) {
     body: parseFont('fonts.body', f.body, label),
   };
 
-  const transitions = (json.transitions ?? TRANSITIONS).map((t, i) => oneOf(`transitions[${i}]`, t, TRANSITIONS));
+  const tr = json.transitions ?? TRANSITIONS;
+  if (!Array.isArray(tr)) fail('transitions', `must be a list of ${TRANSITIONS.join(', ')}`);
+  const transitions = tr.map((t, i) => oneOf(`transitions[${i}]`, t, TRANSITIONS));
 
   const s = json.sound ?? {};
   const key = s.key ?? 'A minor';
@@ -160,7 +179,7 @@ export function loadBrand(json) {
     style: oneOf('sound.style', s.style ?? 'minimal', SOUND_STYLES),
     key: { root: km[1], mode: km[2] },
     file: s.file ?? null,
-    offset: num('sound.offset', s.offset, -600, 600, 0),
+    offset: num('sound.offset', s.offset, 0, 600, 0),
     gain: num('sound.gain', s.gain, 0, 2, 1),
   };
   if (sound.file !== null && (typeof sound.file !== 'string' || sound.file.startsWith('/') || sound.file.split('/').includes('..')))
@@ -174,4 +193,15 @@ export function loadBrand(json) {
   }
 
   return { name: json.name ?? 'untitled', palette, inks, inkNames, fonts, transitions, sound, warnings };
+}
+
+// A film's `sounds` list, checked when the film loads so a typo fails before any frame renders.
+export function checkSounds(sounds, duration) {
+  if (sounds === undefined || sounds === null) return;
+  if (!Array.isArray(sounds)) throw new Error('sounds must be a list of { t, kind }');
+  sounds.forEach((s, i) => {
+    if (!s || typeof s !== 'object') throw new Error(`sounds[${i}] must be an object`);
+    if (!SOUND_KINDS.includes(s.kind)) throw new Error(`sounds[${i}].kind: "${s.kind}" is not one of ${SOUND_KINDS.join(', ')}`);
+    if (typeof s.t !== 'number' || s.t < -1 || s.t > duration + 1) throw new Error(`sounds[${i}].t must be a time in seconds within the film`);
+  });
 }

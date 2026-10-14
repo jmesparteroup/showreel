@@ -1,0 +1,9 @@
+{
+  "name": "Night", "palette": { "black": "#07080A", "white": "#FFFFFF", "lime": "#B6F04A" },
+  "inks": [
+    { "name": "NIGHT", "bg": { "color": "black", "grain": 0.05 }, "grid": null,
+      "line": { "style": "marker", "color": "white", "width": 12 }, "fill": { "style": "hatch", "color": "lime" }, "accent": "lime" },
+    { "name": "GRAIN", "bg": { "color": "black", "grain": 0.05 }, "grid": null,
+      "line": { "style": "clean", "color": "white", "width": 12 }, "fill": { "style": "solid", "color": "lime" }, "accent": "lime" }
+  ]
+}

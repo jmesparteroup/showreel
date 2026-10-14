@@ -51,6 +51,13 @@ for (const [mutate, pattern] of [
   [b => { b.fonts.label = 'google:Inter:600'; }, null],
   [b => { b.fonts.label = 'geist:650'; }, /fonts\.label: Geist weight 650 is not one of 400, 500, 600, 700, 800, 900/],
   [b => { b.inks = []; }, /inks: needs 1 to 6 inks/],
+  [b => { b.fonts.heading = 'geist:900'; }, /fonts\.heading: unknown font role; use display, label, body/],
+  [b => { b.inks[0] = null; }, /inks\[0\]: must be an object/],
+  [b => { b.inks[0].grid.opacity = 0.2; }, /inks\[0\]\.grid\.opacity: must be \[minor, major\]/],
+  [b => { b.transitions = 'flood'; }, /transitions: must be a list/],
+  [b => { b.inks[0].colour = 'ink'; }, /inks\[0\]\.colour: unknown field/],
+  [b => { b.inks[0].line.colour = 'ink'; }, /inks\[0\]\.line\.colour: unknown field/],
+  [b => { b.sound = { offset: -2 }; }, /sound\.offset: -2 must be a number from 0/],
 ]) {
   test(`validation: ${pattern ?? 'google font accepted'}`, () => {
     const b = base();

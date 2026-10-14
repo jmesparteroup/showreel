@@ -34,6 +34,7 @@ export function makePen(name, ctx, env) {
       if (contours.length) impl.fill(contours, { mode: 'solid', color, id: `x${n++}` });
       return lay;
     },
+    measure: (str, { size = 26, weight = 'label', tracking = 0.2 } = {}) => layout(env.fonts[weight], str, { size, tracking }),
     flush: () => impl.flush(),
   };
 }

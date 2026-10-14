@@ -28,8 +28,11 @@ export async function writeAudio(filmDir, meta) {
   if (s.file) {
     const src = path.resolve(filmDir, s.file);
     if (!fs.existsSync(src)) throw new Error(`brand.json sound.file: ${src} not found`);
-    await run(['-y', '-stream_loop', '-1', '-ss', String(Math.max(0, s.offset)), '-i', src, '-t', String(meta.duration),
-      '-af', `volume=${s.gain}`, '-ar', String(SR), '-ac', '2', '-c:a', 'pcm_s16le', out]);
+    // Trimmed with atrim on the looped stream: -ss/-t on a looping input measure shifting
+    // timestamps and overshoot the film's length.
+    await run(['-y', '-stream_loop', '-1', '-i', src,
+      '-af', `atrim=start=${s.offset}:duration=${meta.duration},asetpts=PTS-STARTPTS,volume=${s.gain}`,
+      '-ar', String(SR), '-ac', '2', '-c:a', 'pcm_s16le', out]);
     return out;
   }
   const channels = renderScore({

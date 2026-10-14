@@ -61,3 +61,31 @@ test('brand inks draw with brand colours and treatments', async () => {
     assert.deepEqual([...r.meta.palette].sort(), ['#111014', '#2E5BFF', '#F4F1EA', '#FF5A1F']);
   } finally { await r.close(); }
 });
+
+test('light lines, fills and text show on a dark background in every ink', async () => {
+  const r = await openRenderer(fixture('dark'));
+  try {
+    const px = await r.pixels(0, { frozen: true });
+    const bright = (x0, y0, x1, y1) => { let n = 0; for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) if (at(px, x, y)[1] > 150) n++; return n; };
+    assert.ok(bright(270, 330, 690, 350) > 2000, 'white marker line missing on NIGHT');
+    assert.ok(bright(320, 400, 640, 700) > 5000, 'lime hatch missing on NIGHT');
+    assert.ok(bright(280, 830, 640, 905) > 1500, 'text missing on NIGHT');
+    assert.ok(bright(1260, 400, 1600, 700) > 50000, 'solid fill missing on GRAIN');
+    assert.ok(bright(1240, 830, 1600, 905) > 1500, 'text missing on GRAIN');
+  } finally { await r.close(); }
+});
+
+test('portrait labels stay inside the frame at a readable size', async () => {
+  const r = await openRenderer(fixture('format'));
+  try {
+    const { labels } = await r.pixels(0.2, { scale: 0.25 });
+    for (const b of labels) assert.ok(b.x >= 84 && b.x + b.w <= 1080 - 84, `label box ${JSON.stringify(b)} leaves the frame`);
+  } finally { await r.close(); }
+});
+
+test('a film with an unknown sound kind fails at load, naming it', async () => {
+  const fs = await import('node:fs'), os = await import('node:os'), path = await import('node:path');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sounds-'));
+  fs.writeFileSync(path.join(dir, 'scenes.js'), fs.readFileSync(path.join(fixture('ok'), 'scenes.js'), 'utf8').replace("cues: [", "sounds: [{ t: 1, kind: 'boom' }],\n  cues: ["));
+  await assert.rejects(openRenderer(dir), /sounds\[0\]\.kind: "boom" is not one of/);
+});

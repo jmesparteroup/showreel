@@ -21,6 +21,8 @@ export async function exportFilm(filmDir, { out, workers = Math.max(1, Math.min(
   const r = await openRenderer(filmDir, { pages: workers });
   try {
     const { fps, slug } = r.meta;
+    // Sound first: a missing track or bad sound fails before minutes of frame rendering.
+    const wav = await writeAudio(filmDir, r.meta);
     const [from, to] = frames ?? [0, r.meta.frames];
     const dir = path.join(filmDir, 'out', 'frames');
     fs.rmSync(dir, { recursive: true, force: true });
@@ -36,7 +38,6 @@ export async function exportFilm(filmDir, { out, workers = Math.max(1, Math.min(
     }));
     if (done >= 60) process.stderr.write('\n');
     const mp4 = out ?? path.join(filmDir, 'out', `${slug}.mp4`);
-    const wav = await writeAudio(filmDir, r.meta);
     // ffmpeg reads the image -i as a pattern, so a % anywhere in its path would break it; run it in the frames folder instead.
     await run(ffmpeg, ['-y', '-framerate', String(fps), '-i', '%05d.png', '-ss', String(from / fps), '-i', path.resolve(wav),
       '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '16', '-c:a', 'aac', '-b:a', '192k',

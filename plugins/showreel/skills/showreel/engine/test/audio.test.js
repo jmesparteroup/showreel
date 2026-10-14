@@ -56,3 +56,18 @@ test('the WAV header describes 16-bit stereo PCM', () => {
   assert.equal(buf.readUInt32LE(40), 3 * 2 * 2);
   assert.equal(buf.readInt16LE(44 + 4), Math.round(0.5 * 32767));
 });
+
+test('sparse effects with no music stay at a natural level', () => {
+  const [l] = renderScore({ ...base, style: 'none', sounds: [{ t: 1, kind: 'pop' }] });
+  let over = 0, peak = 0;
+  for (const v of l) { if (Math.abs(v) > 0.8) over++; peak = Math.max(peak, Math.abs(v)); }
+  assert.equal(over, 0, `${over} samples above 0.8: the pop was pushed to full scale`);
+  assert.ok(peak > 0.05, `peak ${peak}`);
+});
+
+test('adding effects does not change how loud the music is', () => {
+  const [a] = renderScore({ ...base, style: 'minimal' });
+  const [b] = renderScore({ ...base, style: 'minimal', sounds: [{ t: 3, kind: 'hit' }, { t: 3.2, kind: 'whoosh' }] });
+  const r1 = rms(a, 0.5, 2.5, 16000), r2 = rms(b, 0.5, 2.5, 16000);
+  assert.ok(Math.abs(r1 - r2) / r1 < 0.02, `music level moved from ${r1.toFixed(4)} to ${r2.toFixed(4)}`);
+});

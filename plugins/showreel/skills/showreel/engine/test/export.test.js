@@ -96,9 +96,9 @@ test('a brand sound file replaces the generated score', async () => {
   fs.writeFileSync(path.join(dir, 'brand.json'), JSON.stringify({
     name: 'X', palette: { a: '#EDE6D5', b: '#16161A' }, inks: [{ name: 'paper', preset: 'paper' }], sound: { file: 'track.wav' },
   }));
-  const meta = { slug: 'fixture-ok', duration: 2, bpm: 120, bars: 1, beatsPerBar: 4, cues: [], sounds: null, brand: { sound: { style: 'minimal', key: { root: 'A', mode: 'minor' }, file: 'track.wav', offset: 0, gain: 1 } } };
+  const meta = { slug: 'fixture-ok', duration: 2, bpm: 120, bars: 1, beatsPerBar: 4, cues: [], sounds: null, brand: { sound: { style: 'minimal', key: { root: 'A', mode: 'minor' }, file: 'track.wav', offset: 0.3, gain: 1 } } };
   const wav = await writeAudio(dir, meta);
   const buf = fs.readFileSync(wav);
   const data = buf.indexOf('data', 12, 'ascii'); // ffmpeg writes a LIST chunk before the samples
-  assert.equal(buf.readUInt32LE(data + 4), 2 * sr * 2 * 2, 'a half-second track should loop to fill the 2 s film');
+  assert.equal(buf.readUInt32LE(data + 4), 2 * sr * 2 * 2, 'a half-second track from 0.3 s should loop to fill exactly the 2 s film');
 });
