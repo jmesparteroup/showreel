@@ -1,0 +1,53 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>showreel preview</title>
+<style>
+  body { margin: 0; background: #07080A; color: #EDE6D5; font: 13px ui-monospace, monospace; }
+  canvas { width: 100vw; height: auto; display: block; }
+  .bar { display: flex; gap: 12px; align-items: center; padding: 8px 16px; }
+  input[type=range] { flex: 1; }
+  pre { color: #ff8080; padding: 16px; white-space: pre-wrap; }
+</style>
+<canvas id="c" width="1920" height="1080"></canvas>
+<div class="bar" id="ui" hidden>
+  <button id="play">pause</button>
+  <input id="scrub" type="range" min="0" step="0.001" value="0">
+  <span id="read"></span>
+  <button id="still">still</button>
+</div>
+<script type="module">
+  import { boot } from './stage.js';
+  const q = new URLSearchParams(location.search);
+  const canvas = document.getElementById('c');
+  try {
+    const stage = await boot(canvas, q.get('film'));
+    window.__stage = stage;
+    window.__ready = true;
+    if (!q.has('headless')) ui(stage);
+  } catch (e) {
+    window.__error = String(e?.stack ?? e);
+    document.body.prepend(Object.assign(document.createElement('pre'), { textContent: window.__error }));
+  }
+
+  function ui({ clock, renderAt }) {
+    const $ = id => document.getElementById(id);
+    $('ui').hidden = false;
+    $('scrub').max = clock.duration;
+    let playing = true, t = 0, last = performance.now();
+    const draw = () => {
+      renderAt(t);
+      $('scrub').value = t;
+      $('read').textContent = `t ${t.toFixed(3)}  bar ${clock.barAt(t) + 1}  beat ${clock.beatAt(t) + 1}`;
+    };
+    const tick = now => {
+      if (playing) t = (t + (now - last) / 1000) % clock.duration;
+      last = now;
+      draw();
+      requestAnimationFrame(tick);
+    };
+    $('play').onclick = () => { playing = !playing; $('play').textContent = playing ? 'pause' : 'play'; };
+    $('scrub').oninput = e => { playing = false; $('play').textContent = 'play'; t = Number(e.target.value); };
+    $('still').onclick = () => canvas.toBlob(b => Object.assign(document.createElement('a'), { href: URL.createObjectURL(b), download: `t-${t.toFixed(2)}.png` }).click());
+    requestAnimationFrame(tick);
+  }
+</script>
