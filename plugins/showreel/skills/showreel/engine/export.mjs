@@ -6,6 +6,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import ffmpeg from 'ffmpeg-static';
 import { openRenderer } from './frames.mjs';
+import { writeAudio } from './audio/render.mjs';
 
 function run(cmd, args, cwd) {
   return new Promise((resolve, reject) => {
@@ -35,8 +36,11 @@ export async function exportFilm(filmDir, { out, workers = Math.max(1, Math.min(
     }));
     if (done >= 60) process.stderr.write('\n');
     const mp4 = out ?? path.join(filmDir, 'out', `${slug}.mp4`);
-    // ffmpeg reads -i as a pattern, so a % anywhere in the path would break it; run it in the frames folder instead.
-    await run(ffmpeg, ['-y', '-framerate', String(fps), '-i', '%05d.png', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '16', '-movflags', '+faststart', path.resolve(mp4)], dir);
+    const wav = await writeAudio(filmDir, r.meta);
+    // ffmpeg reads the image -i as a pattern, so a % anywhere in its path would break it; run it in the frames folder instead.
+    await run(ffmpeg, ['-y', '-framerate', String(fps), '-i', '%05d.png', '-ss', String(from / fps), '-i', path.resolve(wav),
+      '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '16', '-c:a', 'aac', '-b:a', '192k',
+      '-t', String((to - from) / fps), '-movflags', '+faststart', path.resolve(mp4)], dir);
     // A full film is about a gigabyte of PNGs; the MP4 is the deliverable.
     fs.rmSync(dir, { recursive: true, force: true });
     return mp4;

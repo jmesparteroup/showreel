@@ -76,3 +76,29 @@ test('a scaffold at another tempo, meter, rate and size passes the beats check',
   const [still] = await writeStills(dir, [0.5]);
   assert.equal(fs.readFileSync(still).readUInt32BE(16), 1080);
 });
+
+test('the exported MP4 carries an AAC soundtrack as long as the picture', async () => {
+  const dir = copyFixture('ok');
+  const mp4 = await exportFilm(dir, { frames: [0, 60] });
+  const r = spawnSync(ffmpeg, ['-i', mp4], { encoding: 'utf8' });
+  assert.match(r.stderr, /Audio: aac/);
+  assert.ok(fs.existsSync(path.join(dir, 'out', 'fixture-ok.wav')));
+  const d = r.stderr.match(/Duration: 00:00:(\d+\.\d+)/)[1];
+  assert.ok(Math.abs(Number(d) - 1) < 0.06, `duration ${d}`);
+});
+
+test('a brand sound file replaces the generated score', async () => {
+  const { encodeWav } = await import('../audio/wav.mjs');
+  const { writeAudio } = await import('../audio/render.mjs');
+  const dir = copyFixture('ok');
+  const sr = 48000, tone = new Float32Array(sr / 2).map((_, i) => 0.5 * Math.sin((2 * Math.PI * 220 * i) / sr));
+  fs.writeFileSync(path.join(dir, 'track.wav'), encodeWav([tone, tone], sr));
+  fs.writeFileSync(path.join(dir, 'brand.json'), JSON.stringify({
+    name: 'X', palette: { a: '#EDE6D5', b: '#16161A' }, inks: [{ name: 'paper', preset: 'paper' }], sound: { file: 'track.wav' },
+  }));
+  const meta = { slug: 'fixture-ok', duration: 2, bpm: 120, bars: 1, beatsPerBar: 4, cues: [], sounds: null, brand: { sound: { style: 'minimal', key: { root: 'A', mode: 'minor' }, file: 'track.wav', offset: 0, gain: 1 } } };
+  const wav = await writeAudio(dir, meta);
+  const buf = fs.readFileSync(wav);
+  const data = buf.indexOf('data', 12, 'ascii'); // ffmpeg writes a LIST chunk before the samples
+  assert.equal(buf.readUInt32LE(data + 4), 2 * sr * 2 * 2, 'a half-second track should loop to fill the 2 s film');
+});
