@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { spawnSync } from 'node:child_process';
 import { chromium } from 'playwright';
 
 export const ENGINE = path.dirname(fileURLToPath(import.meta.url));
@@ -42,6 +43,27 @@ export async function serveFilm(filmDir) {
   return { url, close: () => new Promise(r => server.close(r)) };
 }
 
+// Parse-only pass over the film's and engine's modules. The browser reports a
+// module syntax error without its file; `node --check` names file and line and
+// runs nothing, so film code still only ever executes in the page.
+function syntaxErrors(filmDir) {
+  const files = [];
+  const walk = dir => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (e.name === 'node_modules' || e.name === 'out' || e.name === 'test') continue;
+      const f = path.join(dir, e.name);
+      if (e.isDirectory()) walk(f);
+      else if (/\.m?js$/.test(e.name)) files.push(f);
+    }
+  };
+  walk(path.resolve(filmDir));
+  walk(ENGINE);
+  return files.flatMap(f => {
+    const r = spawnSync(process.execPath, ['--check', f], { encoding: 'utf8' });
+    return r.status === 0 ? [] : [r.stderr.split('\n').slice(0, 3).join('\n')];
+  });
+}
+
 export async function openRenderer(filmDir, { pages = 1 } = {}) {
   const site = await serveFilm(filmDir);
   let browser;
@@ -60,14 +82,22 @@ export async function openRenderer(filmDir, { pages = 1 } = {}) {
     const problems = [];
     const onResponse = res => { if (res.status() >= 400) problems.push(`${res.status()} ${new URL(res.url()).pathname}`); };
     const onConsole = msg => { if (msg.type() === 'error' && !msg.text().startsWith('Failed to load resource')) problems.push(msg.text()); };
+    const onPageError = e => problems.push(String(e?.stack ?? e));
     page.on('response', onResponse);
     page.on('console', onConsole);
+    page.on('pageerror', onPageError);
     await page.goto(site.url + '&headless=1');
-    await page.waitForFunction(() => window.__ready || window.__error, null, { timeout: 60000 });
-    const err = await page.evaluate(() => window.__error);
+    let err;
+    try {
+      await page.waitForFunction(() => window.__ready || window.__error, null, { timeout: 60000 });
+      err = await page.evaluate(() => window.__error);
+    } catch (e) {
+      err = `film did not boot: ${e.message}`;
+    }
     page.off('response', onResponse);
     page.off('console', onConsole);
-    if (err) throw new Error([err, ...problems].join('\n'));
+    page.off('pageerror', onPageError);
+    if (err) throw new Error([err, ...problems, ...syntaxErrors(filmDir)].join('\n'));
     return page;
   };
   const list = [];

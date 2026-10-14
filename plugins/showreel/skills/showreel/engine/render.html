@@ -16,10 +16,12 @@
   <button id="still">still</button>
 </div>
 <script type="module">
-  import { boot } from './stage.js';
   const q = new URLSearchParams(location.search);
   const canvas = document.getElementById('c');
   try {
+    // Imported here rather than statically, so an engine module that fails to
+    // load is reported through __error instead of leaving the page silent.
+    const { boot } = await import('./stage.js');
     const stage = await boot(canvas, q.get('film'));
     window.__stage = stage;
     window.__ready = true;

@@ -17,6 +17,8 @@ export async function writeStills(filmDir, times) {
 export async function writeBarStills(filmDir) {
   const r = await openRenderer(filmDir);
   try {
+    // A contact set replaces the folder so it never mixes with stills of older code.
+    fs.rmSync(path.join(filmDir, 'out', 'stills'), { recursive: true, force: true });
     return await render(r, filmDir, barTimes({ bars: r.meta.bars, barDur: r.meta.duration / r.meta.bars }));
   } finally {
     await r.close();

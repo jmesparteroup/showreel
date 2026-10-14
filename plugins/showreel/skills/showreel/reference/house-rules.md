@@ -37,7 +37,9 @@ Change tempo or length only when the concept asks for it. The engine reads `bpm`
 | Rule | Check |
 |---|---|
 | A cue on every beat | `beats`: every beat has a cue in `[beat - 0.05, beat]` |
-| Last frame = first frame | `loop`: t = 0 and t = duration match pixel for pixel |
-| Empty border | `border`: no `api.rest()` box enters the margin |
-| No hold over 0.5 s | `holds`: no run of more than 30 identical frames (labels excluded) |
-| No stray colours, glows or gradients | `palette`: pixels stay on blends between palette colours |
+| Last frame = first frame | `loop`: no 8 x 8 block differs between t = 0 and t = duration |
+| Empty border | `border`: no `api.rest()` box enters the margin, and at least one is declared |
+| No hold over 0.5 s | `holds`: no run of more than 30 identical frames (labels excluded), counted across the loop point |
+| No stray colours | `palette`: ten times a second, pixels stay on blends between palette colours |
+
+Glows and gradients built from palette colours pass the palette check; catch them by eye on the stills.

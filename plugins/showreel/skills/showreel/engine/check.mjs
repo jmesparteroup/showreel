@@ -8,6 +8,9 @@ const SWEEP_SCALE = 0.25;
 const HOLD_LIMIT = 30; // frames at 60 fps = 0.5 s
 const PALETTE_TOL = 48;
 const PALETTE_MAX_OUT = 0.005;
+const PALETTE_EVERY = 6; // frames: ten samples a second
+const BLOCK = 8;
+const BLOCK_MAX = 12; // mean level difference allowed in any 8 x 8 block at the seam
 
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 
@@ -25,13 +28,21 @@ export function checkBeats(m) {
   return { name: 'beats', ok, detail };
 }
 
-function meanDiff(a, b) {
-  let d = 0, n = 0;
-  for (let i = 0; i < a.data.length; i += 4) {
-    d += Math.abs(a.data[i] - b.data[i]) + Math.abs(a.data[i + 1] - b.data[i + 1]) + Math.abs(a.data[i + 2] - b.data[i + 2]);
-    n += 3;
-  }
-  return d / n;
+// The worst 8 x 8 block, so a small element popping at the seam is not averaged away.
+function worstBlock(a, b) {
+  let worst = 0;
+  for (let by = 0; by < a.height; by += BLOCK)
+    for (let bx = 0; bx < a.width; bx += BLOCK) {
+      let d = 0, n = 0;
+      for (let y = by; y < Math.min(by + BLOCK, a.height); y++)
+        for (let x = bx; x < Math.min(bx + BLOCK, a.width); x++) {
+          const i = (y * a.width + x) * 4;
+          d += Math.abs(a.data[i] - b.data[i]) + Math.abs(a.data[i + 1] - b.data[i + 1]) + Math.abs(a.data[i + 2] - b.data[i + 2]);
+          n += 3;
+        }
+      worst = Math.max(worst, d / n);
+    }
+  return worst;
 }
 
 function identical(a, b, masks) {
@@ -84,14 +95,15 @@ export async function runChecks(filmDir, { only, range, workers = Math.max(1, Ma
     if (want('loop')) {
       const a = await r.pixels(0, { frozen: true, scale: 0.5 });
       const b = await r.pixels(m.duration, { frozen: true, scale: 0.5 });
-      const d = meanDiff(a, b);
-      results.push({ name: 'loop', ok: d < 1, detail: d < 1 ? 'last frame equals the first' : `last frame differs from the first (mean diff ${d.toFixed(2)}/255)` });
+      const d = worstBlock(a, b);
+      results.push({ name: 'loop', ok: d <= BLOCK_MAX, detail: d <= BLOCK_MAX ? 'last frame equals the first' : `last frame differs from the first (worst 8 x 8 block differs by ${d.toFixed(1)}/255)` });
     }
     if (want('border') || want('holds') || want('palette')) {
       const f0 = range ? Math.round(range[0] * m.fps) : 0;
       const f1 = range ? Math.round(range[1] * m.fps) : m.frames;
       const same = new Array(f1).fill(false);
       const borderHits = [], paletteHits = [];
+      let restCount = 0, first = null, last = null;
       const chunk = Math.ceil((f1 - f0) / r.pages.length);
       await Promise.all(r.pages.map(async (page, w) => {
         const a = f0 + w * chunk, b = Math.min(f1, a + chunk);
@@ -100,27 +112,44 @@ export async function runChecks(filmDir, { only, range, workers = Math.max(1, Ma
         for (let i = a; i < b; i++) {
           const t = i / m.fps;
           const px = await r.pixels(t, { frozen: true, scale: SWEEP_SCALE }, page);
+          if (i === f0) first = px;
+          if (i === f1 - 1) last = px;
+          restCount += px.rest.length;
           for (const box of px.rest)
             if (box.x < MARGIN.x - 0.5 || box.y < MARGIN.y - 0.5 || box.x + box.w > 1920 - MARGIN.x + 0.5 || box.y + box.h > 1080 - MARGIN.y + 0.5)
               borderHits.push(`t=${t.toFixed(3)} rest box ${JSON.stringify(box)}`);
           if (prev) same[i] = identical(prev, px, px.labels);
-          if (want('palette') && i % Math.round(m.spb * m.fps) === 0) {
+          if (want('palette') && i % PALETTE_EVERY === 0) {
             const frac = outsidePalette(px, m.palette);
             if (frac > PALETTE_MAX_OUT) paletteHits.push(`t=${t.toFixed(2)} ${(frac * 100).toFixed(1)}%`);
           }
           prev = px;
         }
       }));
-      if (want('border'))
-        results.push({ name: 'border', ok: !borderHits.length, detail: borderHits.length ? `${borderHits.length} frames: ${borderHits.slice(0, 5).join('; ')}` : 'border clear' });
+      if (want('border')) {
+        // A film that declares nothing at rest would pass vacuously.
+        const ok = !borderHits.length && restCount > 0;
+        const detail = borderHits.length ? `${borderHits.length} frames: ${borderHits.slice(0, 5).join('; ')}`
+          : restCount ? `border clear (${restCount} rest boxes checked)` : 'no rest boxes declared: call api.rest(box) for every element once it settles';
+        results.push({ name: 'border', ok, detail });
+      }
       if (want('holds')) {
-        const holds = [];
-        let run = 1;
+        const runs = [];
+        let run = 1, start = f0;
         for (let i = f0 + 1; i <= f1; i++) {
           if (i < f1 && same[i]) { run++; continue; }
-          if (run > HOLD_LIMIT) holds.push(`hold of ${run} frames ending t=${((i - 1) / m.fps).toFixed(2)}`);
-          run = 1;
+          runs.push({ start, len: run });
+          run = 1; start = i;
         }
+        // Over the whole film the last frame plays straight into the first, so a still
+        // ending and a still opening are one hold.
+        const full = f0 === 0 && f1 === m.frames;
+        if (full && runs.length > 1 && identical(last, first, first.labels)) {
+          const tail = runs.pop();
+          runs[0] = { start: tail.start, len: tail.len + runs[0].len, seam: true };
+        }
+        const holds = runs.filter(r => r.len > HOLD_LIMIT).map(r =>
+          r.seam ? `hold of ${r.len} frames across the loop point` : `hold of ${r.len} frames ending t=${((r.start + r.len - 1) / m.fps).toFixed(2)}`);
         results.push({ name: 'holds', ok: !holds.length, detail: holds.length ? holds.join('; ') : 'no hold over 0.5 s' });
       }
       if (want('palette'))

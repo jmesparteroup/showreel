@@ -36,6 +36,8 @@ export async function exportFilm(filmDir, { out, workers = Math.max(1, Math.min(
     if (done >= 60) process.stderr.write('\n');
     const mp4 = out ?? path.join(filmDir, 'out', `${slug}.mp4`);
     await run(ffmpeg, ['-y', '-framerate', String(fps), '-i', path.join(dir, '%05d.png'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '16', '-movflags', '+faststart', mp4]);
+    // A full film is about a gigabyte of PNGs; the MP4 is the deliverable.
+    fs.rmSync(dir, { recursive: true, force: true });
     return mp4;
   } finally {
     await r.close();

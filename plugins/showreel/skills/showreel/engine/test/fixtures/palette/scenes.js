@@ -10,6 +10,7 @@ export default {
     const c = api.geom.circle(960 + 300 * Math.cos(a), 540 + 150 * Math.sin(a), 120);
     p.fill(c, { color: 'accent' });
     p.stroke(c, { closed: true });
+    api.rest({ x: 600, y: 300, w: 720, h: 480 });
     api.labels(p);
     p.flush();
     ctx.fillStyle = '#E0218A';

@@ -98,3 +98,20 @@ test('host page refuses a film from outside /film/', async () => {
 test('a film importing a missing module names the missing file', async () => {
   await assert.rejects(openRenderer(fixture('missing-import')), /bars\/02\.js/);
 });
+
+test('a syntax error in a film module names the file and line', async () => {
+  await assert.rejects(openRenderer(fixture('syntax')), /bars\/01\.js:3/);
+});
+
+test('a broken engine module fails fast and names the module', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'engine-copy-'));
+  const engine = new URL('..', import.meta.url).pathname;
+  fs.cpSync(engine, path.join(root, 'engine'), { recursive: true, filter: src => !src.includes('node_modules') && !src.includes(`${path.sep}test${path.sep}`) });
+  fs.symlinkSync(path.join(engine, 'node_modules'), path.join(root, 'engine', 'node_modules'));
+  fs.symlinkSync(path.join(engine, '..', 'fonts'), path.join(root, 'fonts'));
+  fs.appendFileSync(path.join(root, 'engine', 'ink', 'hologram.js'), '\nexport const broken = ;\n');
+  const { openRenderer: open } = await import(path.join(root, 'engine', 'frames.mjs'));
+  const started = Date.now();
+  await assert.rejects(open(fixture('ok')), /hologram\.js/);
+  assert.ok(Date.now() - started < 20000, 'took longer than 20 s to report');
+});

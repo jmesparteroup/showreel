@@ -25,7 +25,7 @@ test('exports an MP4 with one frame per 1/60 s and clears stale frames', async (
   fs.writeFileSync(path.join(dir, 'out', 'frames', '99999.png'), 'stale');
   const mp4 = await exportFilm(dir, { frames: [0, 12] });
   assert.equal(frameCount(mp4), 12);
-  assert.ok(!fs.existsSync(path.join(dir, 'out', 'frames', '99999.png')), 'stale frame survived');
+  assert.ok(!fs.existsSync(path.join(dir, 'out', 'frames')), 'frame PNGs left on disk after encoding');
 });
 
 test('writes stills named by time', async () => {

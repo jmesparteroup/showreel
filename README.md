@@ -19,7 +19,7 @@ The reference film, `claude-motion-designer`: one pencil line drawn on paper, th
 /plugin install showreel@showreel
 ```
 
-The first run installs the renderer's dependencies (Playwright with Chromium, opentype.js, a bundled ffmpeg) into the skill's `engine/` folder.
+On first use the skill has Claude install the renderer's dependencies (Playwright with Chromium, opentype.js, a bundled ffmpeg) into its `engine/` folder. A plugin update replaces that folder, so the install runs again after updates.
 
 ## What you get
 

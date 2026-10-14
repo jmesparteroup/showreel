@@ -23,3 +23,16 @@ for (const [fx, name, pattern] of [
     assert.match(r[name].detail, pattern);
   });
 }
+
+for (const [fx, name, pattern] of [
+  ['loopsmall', 'loop', /last frame differs/],
+  ['seamhold', 'holds', /across the loop/],
+  ['norest', 'border', /no rest boxes/],
+  ['offbeat', 'palette', /outside the palette/],
+]) {
+  test(`${fx} fixture fails the ${name} check`, async () => {
+    const r = byName(await runChecks(fixture(fx), { only: [name] }));
+    assert.equal(r[name].ok, false, r[name].detail);
+    assert.match(r[name].detail, pattern);
+  });
+}

@@ -48,6 +48,7 @@ Read `reference/film-api.md`, `reference/transitions.md` and the reference film'
 1. Fill in `scenes.js`: `barNames`, `palette`.
 2. Write `shared.js`: the geometry at every bar boundary, as constants or functions of `api`.
 3. Write one bar module at a time (`bars/NN.js`). Its `cues` list the real move times from the storyboard.
+4. Call `api.rest({ x, y, w, h })` for every element once it settles, with its bounding box. The border check only sees what is declared, and fails a film that declares nothing.
 
 After each bar, render stills and look at every one:
 
@@ -55,7 +56,9 @@ After each bar, render stills and look at every one:
 node ENGINE/stills.mjs films/<slug> <bar start + 0.25> <bar midpoint> <bar end - 0.1>
 ```
 
-Check by eye: the empty border, overlaps, type too small to read, hatching density, and continuity with the previous bar's last still. Fix what you see before writing the next bar.
+Check by eye: the empty border, overlaps, type too small to read, hatching density, smooth gradients or glow-like fills (the palette check cannot tell a gradient between two palette colours from anti-aliasing), and continuity with the previous bar's last still. Fix what you see before writing the next bar.
+
+If the film fails to load, the error lists failed requests and any module with a syntax error, by file and line.
 
 For the user, a live preview with a scrubber: `node ENGINE/preview.mjs films/<slug>`.
 
